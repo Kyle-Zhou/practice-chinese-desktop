@@ -1,0 +1,59 @@
+[
+  {
+    "name": "Ordering at a Restaurant",
+    "description": "You are a customer at a Chinese restaurant, practicing ordering food and drinks with the waiter.",
+    "plan": [
+      { "id": "greet", "description": "Greet the waiter and ask to be seated or for a menu" },
+      { "id": "ask_recommendation", "description": "Ask the waiter for a recommendation" },
+      { "id": "order_dish", "description": "Order at least one dish" },
+      { "id": "order_drink", "description": "Order a drink" },
+      { "id": "ask_bill", "description": "Ask for the bill at the end of the meal" },
+      { "id": "goodbye", "description": "Thank the waiter and say goodbye" }
+    ]
+  },
+  {
+    "name": "Asking for Directions",
+    "description": "You are lost in a city in China and need to ask a stranger for directions to a specific place.",
+    "plan": [
+      { "id": "greet", "description": "Politely greet the stranger and get their attention" },
+      { "id": "state_destination", "description": "Explain where you are trying to go" },
+      { "id": "understand_directions", "description": "Listen to and acknowledge the directions given" },
+      { "id": "clarify", "description": "Ask a clarifying question or ask them to repeat something" },
+      { "id": "thanks", "description": "Thank the stranger for their help" }
+    ]
+  },
+  {
+    "name": "Job Interview",
+    "description": "You are being interviewed for a job at a company in China. Answer questions naturally and ask some of your own.",
+    "plan": [
+      { "id": "introduce", "description": "Introduce yourself" },
+      { "id": "experience", "description": "Describe your relevant work experience or skills" },
+      { "id": "why_job", "description": "Explain why you want this job" },
+      { "id": "ask_questions", "description": "Ask the interviewer at least one question about the role" },
+      { "id": "closing", "description": "Close the interview politely" }
+    ]
+  },
+  {
+    "name": "Doctor's Appointment",
+    "description": "You are visiting a doctor in China because you don't feel well. Describe your symptoms and understand their advice.",
+    "plan": [
+      { "id": "check_in", "description": "Check in and explain you have an appointment or need to see a doctor" },
+      { "id": "symptoms", "description": "Describe your symptoms" },
+      { "id": "answer_followup", "description": "Answer the doctor's follow-up questions" },
+      { "id": "understand_advice", "description": "Understand and acknowledge the doctor's diagnosis or advice" },
+      { "id": "medication", "description": "Ask about medication or next steps" },
+      { "id": "thanks", "description": "Thank the doctor and end the visit" }
+    ]
+  },
+  {
+    "name": "Shopping for Clothes",
+    "description": "You are shopping for clothes at a store in China and interacting with a shop assistant.",
+    "plan": [
+      { "id": "greet", "description": "Greet the shop assistant" },
+      { "id": "describe_item", "description": "Describe what kind of clothing you are looking for" },
+      { "id": "ask_options", "description": "Ask about size or color options" },
+      { "id": "ask_price", "description": "Ask about the price" },
+      { "id": "decide", "description": "Decide whether to buy the item and complete or decline the purchase" }
+    ]
+  }
+]

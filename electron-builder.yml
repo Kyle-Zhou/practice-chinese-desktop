@@ -1,0 +1,22 @@
+appId: com.kylezhou.chinese-anki
+productName: Chinese Anki
+directories:
+  buildResources: resources
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+extraResources:
+  - from: seed
+    to: seed
+asarUnpack:
+  - resources/**
+mac:
+  target: dmg
+  category: public.app-category.education
+win:
+  target: nsis
+linux:
+  target: AppImage
+  category: Education

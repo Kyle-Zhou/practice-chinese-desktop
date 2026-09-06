@@ -1,0 +1,752 @@
+[
+  {
+    "hanzi": "爱",
+    "pinyin": "ài",
+    "english": "to love; to be fond of; to like; affection"
+  },
+  {
+    "hanzi": "八",
+    "pinyin": "bā",
+    "english": "eight; 8"
+  },
+  {
+    "hanzi": "爸爸",
+    "pinyin": "bà ba",
+    "english": "(coll.) father; dad"
+  },
+  {
+    "hanzi": "杯子",
+    "pinyin": "bēi zi",
+    "english": "cup; glass"
+  },
+  {
+    "hanzi": "北京",
+    "pinyin": "Běi jīng",
+    "english": "Beijing, capital of the People's Republic of China"
+  },
+  {
+    "hanzi": "本",
+    "pinyin": "běn",
+    "english": "root; stem"
+  },
+  {
+    "hanzi": "不",
+    "pinyin": "bù",
+    "english": "no; not so; (bound form) not; un-"
+  },
+  {
+    "hanzi": "不客气",
+    "pinyin": "bù kè qi",
+    "english": "you're welcome; don't mention it"
+  },
+  {
+    "hanzi": "菜",
+    "pinyin": "cài",
+    "english": "dish (type of food); vegetable"
+  },
+  {
+    "hanzi": "茶",
+    "pinyin": "chá",
+    "english": "tea; tea plant"
+  },
+  {
+    "hanzi": "吃",
+    "pinyin": "chī",
+    "english": "to eat; to consume; to eat at (a cafeteria etc)"
+  },
+  {
+    "hanzi": "出租车",
+    "pinyin": "chū zū chē",
+    "english": "taxi; (Tw) rental car"
+  },
+  {
+    "hanzi": "打电话",
+    "pinyin": "dǎ diàn huà",
+    "english": "to make a telephone call"
+  },
+  {
+    "hanzi": "大",
+    "pinyin": "dà",
+    "english": "big; large; great; older (than another person)"
+  },
+  {
+    "hanzi": "的",
+    "pinyin": "de",
+    "english": "of; ~'s (possessive particle); (used after an attribute)"
+  },
+  {
+    "hanzi": "点",
+    "pinyin": "diǎn",
+    "english": "point; dot"
+  },
+  {
+    "hanzi": "电脑",
+    "pinyin": "diàn nǎo",
+    "english": "computer"
+  },
+  {
+    "hanzi": "电视",
+    "pinyin": "diàn shì",
+    "english": "television; TV"
+  },
+  {
+    "hanzi": "电影",
+    "pinyin": "diàn yǐng",
+    "english": "movie; film"
+  },
+  {
+    "hanzi": "东西",
+    "pinyin": "dōng xi",
+    "english": "thing; stuff"
+  },
+  {
+    "hanzi": "都",
+    "pinyin": "dōu",
+    "english": "all; both; entirely; (used for emphasis) even"
+  },
+  {
+    "hanzi": "读",
+    "pinyin": "dú",
+    "english": "to read out; to read aloud; to read"
+  },
+  {
+    "hanzi": "对不起",
+    "pinyin": "duì bu qǐ",
+    "english": "I'm sorry; excuse me; I beg your pardon; to let (sb) down; to disappoint"
+  },
+  {
+    "hanzi": "多",
+    "pinyin": "duō",
+    "english": "many; much; too many; in excess"
+  },
+  {
+    "hanzi": "多少",
+    "pinyin": "duō shǎo",
+    "english": "number; amount"
+  },
+  {
+    "hanzi": "儿子",
+    "pinyin": "ér zi",
+    "english": "son"
+  },
+  {
+    "hanzi": "二",
+    "pinyin": "èr",
+    "english": "two; 2"
+  },
+  {
+    "hanzi": "饭馆",
+    "pinyin": "fàn guǎn",
+    "english": "restaurant"
+  },
+  {
+    "hanzi": "飞机",
+    "pinyin": "fēi jī",
+    "english": "airplane"
+  },
+  {
+    "hanzi": "分钟",
+    "pinyin": "fēn zhōng",
+    "english": "minute"
+  },
+  {
+    "hanzi": "高兴",
+    "pinyin": "gāo xìng",
+    "english": "happy; glad"
+  },
+  {
+    "hanzi": "个",
+    "pinyin": "gè",
+    "english": "(classifier used before a noun that has no specific classifier); (bound form) individual"
+  },
+  {
+    "hanzi": "工作",
+    "pinyin": "gōng zuò",
+    "english": "to work; (of a machine) to operate"
+  },
+  {
+    "hanzi": "狗",
+    "pinyin": "gǒu",
+    "english": "dog"
+  },
+  {
+    "hanzi": "汉语",
+    "pinyin": "Hàn yǔ",
+    "english": "Chinese language"
+  },
+  {
+    "hanzi": "好",
+    "pinyin": "hǎo",
+    "english": "good; appropriate; proper"
+  },
+  {
+    "hanzi": "喝",
+    "pinyin": "hē",
+    "english": "to drink"
+  },
+  {
+    "hanzi": "和",
+    "pinyin": "hé",
+    "english": "(joining two nouns) and; together with; with (Taiwan pr. [hàn]); (math.) sum"
+  },
+  {
+    "hanzi": "很",
+    "pinyin": "hěn",
+    "english": "(adverb of degree); quite"
+  },
+  {
+    "hanzi": "后面",
+    "pinyin": "hòu mian",
+    "english": "the back; the rear; the last bit; behind; near the end; at the back"
+  },
+  {
+    "hanzi": "回",
+    "pinyin": "huí",
+    "english": "to circle; to go back"
+  },
+  {
+    "hanzi": "会",
+    "pinyin": "huì",
+    "english": "can; to have the skill; to know how to; to be likely to; to be sure to"
+  },
+  {
+    "hanzi": "火车站",
+    "pinyin": "huǒ chē zhàn",
+    "english": "train station"
+  },
+  {
+    "hanzi": "几",
+    "pinyin": "jǐ",
+    "english": "how much; how many"
+  },
+  {
+    "hanzi": "家",
+    "pinyin": "jiā",
+    "english": "home; family"
+  },
+  {
+    "hanzi": "叫",
+    "pinyin": "jiào",
+    "english": "to shout; to call"
+  },
+  {
+    "hanzi": "今天",
+    "pinyin": "jīn tiān",
+    "english": "today; at the present"
+  },
+  {
+    "hanzi": "九",
+    "pinyin": "jiǔ",
+    "english": "nine; 9"
+  },
+  {
+    "hanzi": "开",
+    "pinyin": "kāi",
+    "english": "to open (transitive or intransitive); (of ships, vehicles, troops etc) to start"
+  },
+  {
+    "hanzi": "看",
+    "pinyin": "kàn",
+    "english": "to see; to look at; to read"
+  },
+  {
+    "hanzi": "看见",
+    "pinyin": "kàn jiàn",
+    "english": "to see; to catch sight of"
+  },
+  {
+    "hanzi": "块",
+    "pinyin": "kuài",
+    "english": "lump; chunk; piece; classifier for pieces of cloth, cake, soap etc"
+  },
+  {
+    "hanzi": "来",
+    "pinyin": "lái",
+    "english": "to come; (used as a substitute for a more specific verb)"
+  },
+  {
+    "hanzi": "老师",
+    "pinyin": "lǎo shī",
+    "english": "teacher"
+  },
+  {
+    "hanzi": "了",
+    "pinyin": "le",
+    "english": "(completed action marker); (modal particle indicating change of state, situation now)"
+  },
+  {
+    "hanzi": "冷",
+    "pinyin": "lěng",
+    "english": "cold"
+  },
+  {
+    "hanzi": "里",
+    "pinyin": "lǐ",
+    "english": "lining; interior"
+  },
+  {
+    "hanzi": "零",
+    "pinyin": "líng",
+    "english": "zero; nought"
+  },
+  {
+    "hanzi": "六",
+    "pinyin": "liù",
+    "english": "six; 6"
+  },
+  {
+    "hanzi": "妈妈",
+    "pinyin": "mā ma",
+    "english": "mama; mommy"
+  },
+  {
+    "hanzi": "吗",
+    "pinyin": "ma",
+    "english": "(question particle for \"yes-no\" questions)"
+  },
+  {
+    "hanzi": "买",
+    "pinyin": "mǎi",
+    "english": "to buy; to purchase"
+  },
+  {
+    "hanzi": "猫",
+    "pinyin": "māo",
+    "english": "cat; (coll.) modem"
+  },
+  {
+    "hanzi": "没",
+    "pinyin": "méi",
+    "english": "not; have not"
+  },
+  {
+    "hanzi": "没关系",
+    "pinyin": "méi guān xi",
+    "english": "it doesn't matter"
+  },
+  {
+    "hanzi": "米饭",
+    "pinyin": "mǐ fàn",
+    "english": "(cooked) rice"
+  },
+  {
+    "hanzi": "名字",
+    "pinyin": "míng zi",
+    "english": "name (of a person or thing)"
+  },
+  {
+    "hanzi": "明天",
+    "pinyin": "míng tiān",
+    "english": "tomorrow"
+  },
+  {
+    "hanzi": "哪",
+    "pinyin": "nǎ",
+    "english": "how; which"
+  },
+  {
+    "hanzi": "那",
+    "pinyin": "nà",
+    "english": "(specifier) that; the; those (colloquial pr. [nèi]); (pronoun) that (referring to persons, things or situations)"
+  },
+  {
+    "hanzi": "呢",
+    "pinyin": "ne",
+    "english": "particle indicating that a previously asked question is to be applied to the preceding word (\"What about ...?\", \"And ...?\"); particle for inquiring about location (\"Where is ...?\")"
+  },
+  {
+    "hanzi": "能",
+    "pinyin": "néng",
+    "english": "can; to be able to"
+  },
+  {
+    "hanzi": "你",
+    "pinyin": "nǐ",
+    "english": "you (informal, as opposed to courteous 您)"
+  },
+  {
+    "hanzi": "年",
+    "pinyin": "nián",
+    "english": "year"
+  },
+  {
+    "hanzi": "女儿",
+    "pinyin": "nǚ ér",
+    "english": "daughter"
+  },
+  {
+    "hanzi": "朋友",
+    "pinyin": "péng you",
+    "english": "friend"
+  },
+  {
+    "hanzi": "漂亮",
+    "pinyin": "piào liang",
+    "english": "pretty; beautiful"
+  },
+  {
+    "hanzi": "苹果",
+    "pinyin": "píng guǒ",
+    "english": "apple"
+  },
+  {
+    "hanzi": "七",
+    "pinyin": "qī",
+    "english": "seven; 7"
+  },
+  {
+    "hanzi": "前面",
+    "pinyin": "qián miàn",
+    "english": "ahead; in front"
+  },
+  {
+    "hanzi": "钱",
+    "pinyin": "qián",
+    "english": "coin; money"
+  },
+  {
+    "hanzi": "请",
+    "pinyin": "qǐng",
+    "english": "to ask; to invite"
+  },
+  {
+    "hanzi": "去",
+    "pinyin": "qù",
+    "english": "to go; to go to (a place)"
+  },
+  {
+    "hanzi": "热",
+    "pinyin": "rè",
+    "english": "to warm up; to heat up"
+  },
+  {
+    "hanzi": "人",
+    "pinyin": "rén",
+    "english": "person; people"
+  },
+  {
+    "hanzi": "认识",
+    "pinyin": "rèn shi",
+    "english": "to know; to recognize"
+  },
+  {
+    "hanzi": "日",
+    "pinyin": "rì",
+    "english": "sun; day"
+  },
+  {
+    "hanzi": "三",
+    "pinyin": "sān",
+    "english": "three; 3"
+  },
+  {
+    "hanzi": "商店",
+    "pinyin": "shāng diàn",
+    "english": "store; shop"
+  },
+  {
+    "hanzi": "上",
+    "pinyin": "shàng",
+    "english": "(bound form) up; upper; above; previous; first (of multiple parts)"
+  },
+  {
+    "hanzi": "上午",
+    "pinyin": "shàng wǔ",
+    "english": "morning"
+  },
+  {
+    "hanzi": "少",
+    "pinyin": "shǎo",
+    "english": "few; less"
+  },
+  {
+    "hanzi": "什么",
+    "pinyin": "shén me",
+    "english": "what?; something"
+  },
+  {
+    "hanzi": "十",
+    "pinyin": "shí",
+    "english": "ten; 10"
+  },
+  {
+    "hanzi": "时候",
+    "pinyin": "shí hou",
+    "english": "time; length of time"
+  },
+  {
+    "hanzi": "是",
+    "pinyin": "shì",
+    "english": "to be (followed by substantives only); correct; right; true"
+  },
+  {
+    "hanzi": "书",
+    "pinyin": "shū",
+    "english": "book; letter"
+  },
+  {
+    "hanzi": "谁",
+    "pinyin": "shéi",
+    "english": "who; also pr. [shuí]"
+  },
+  {
+    "hanzi": "水",
+    "pinyin": "shuǐ",
+    "english": "water; river"
+  },
+  {
+    "hanzi": "水果",
+    "pinyin": "shuǐ guǒ",
+    "english": "fruit"
+  },
+  {
+    "hanzi": "睡觉",
+    "pinyin": "shuì jiào",
+    "english": "to go to bed; to sleep"
+  },
+  {
+    "hanzi": "说话",
+    "pinyin": "shuō huà",
+    "english": "to speak; to say"
+  },
+  {
+    "hanzi": "四",
+    "pinyin": "sì",
+    "english": "four; 4"
+  },
+  {
+    "hanzi": "岁",
+    "pinyin": "suì",
+    "english": "classifier for years (of age); year"
+  },
+  {
+    "hanzi": "他",
+    "pinyin": "tā",
+    "english": "he; him (used for either sex when the sex is unknown or unimportant); (used before sb's name for emphasis)"
+  },
+  {
+    "hanzi": "她",
+    "pinyin": "tā",
+    "english": "she"
+  },
+  {
+    "hanzi": "太",
+    "pinyin": "tài",
+    "english": "highest; greatest"
+  },
+  {
+    "hanzi": "天气",
+    "pinyin": "tiān qì",
+    "english": "weather"
+  },
+  {
+    "hanzi": "听",
+    "pinyin": "tīng",
+    "english": "to listen to; to hear; to heed; to obey"
+  },
+  {
+    "hanzi": "同学",
+    "pinyin": "tóng xué",
+    "english": "to study at the same school; fellow student"
+  },
+  {
+    "hanzi": "喂",
+    "pinyin": "wèi",
+    "english": "hey; to feed (an animal, baby, invalid etc)"
+  },
+  {
+    "hanzi": "我",
+    "pinyin": "wǒ",
+    "english": "I; me; my"
+  },
+  {
+    "hanzi": "我们",
+    "pinyin": "wǒ men",
+    "english": "we; us"
+  },
+  {
+    "hanzi": "五",
+    "pinyin": "wǔ",
+    "english": "five; 5"
+  },
+  {
+    "hanzi": "喜欢",
+    "pinyin": "xǐ huan",
+    "english": "to like; to be fond of"
+  },
+  {
+    "hanzi": "下",
+    "pinyin": "xià",
+    "english": "down; downwards"
+  },
+  {
+    "hanzi": "下午",
+    "pinyin": "xià wǔ",
+    "english": "afternoon; p.m."
+  },
+  {
+    "hanzi": "下雨",
+    "pinyin": "xià yǔ",
+    "english": "to rain"
+  },
+  {
+    "hanzi": "先生",
+    "pinyin": "xiān sheng",
+    "english": "teacher; gentleman; sir; mister (Mr.)"
+  },
+  {
+    "hanzi": "现在",
+    "pinyin": "xiàn zài",
+    "english": "now; at present"
+  },
+  {
+    "hanzi": "想",
+    "pinyin": "xiǎng",
+    "english": "to think (about); to think of; to devise"
+  },
+  {
+    "hanzi": "小",
+    "pinyin": "xiǎo",
+    "english": "small; tiny"
+  },
+  {
+    "hanzi": "小姐",
+    "pinyin": "xiǎo jie",
+    "english": "young lady; miss"
+  },
+  {
+    "hanzi": "些",
+    "pinyin": "xiē",
+    "english": "classifier indicating a small amount or small number greater than 1: some, a few, several"
+  },
+  {
+    "hanzi": "写",
+    "pinyin": "xiě",
+    "english": "to write"
+  },
+  {
+    "hanzi": "谢谢",
+    "pinyin": "xiè xie",
+    "english": "to thank; thanks"
+  },
+  {
+    "hanzi": "星期",
+    "pinyin": "xīng qī",
+    "english": "week; day of the week"
+  },
+  {
+    "hanzi": "学生",
+    "pinyin": "xué sheng",
+    "english": "student; schoolchild"
+  },
+  {
+    "hanzi": "学习",
+    "pinyin": "xué xí",
+    "english": "to learn; to study"
+  },
+  {
+    "hanzi": "学校",
+    "pinyin": "xué xiào",
+    "english": "school"
+  },
+  {
+    "hanzi": "一",
+    "pinyin": "yī",
+    "english": "one; single"
+  },
+  {
+    "hanzi": "衣服",
+    "pinyin": "yī fu",
+    "english": "clothes"
+  },
+  {
+    "hanzi": "医生",
+    "pinyin": "yī shēng",
+    "english": "doctor"
+  },
+  {
+    "hanzi": "医院",
+    "pinyin": "yī yuàn",
+    "english": "hospital"
+  },
+  {
+    "hanzi": "椅子",
+    "pinyin": "yǐ zi",
+    "english": "chair"
+  },
+  {
+    "hanzi": "有",
+    "pinyin": "yǒu",
+    "english": "to have; there is; (bound form) having; with; -ful; -ed; -al (as in 意 intentional)"
+  },
+  {
+    "hanzi": "月",
+    "pinyin": "yuè",
+    "english": "moon; month"
+  },
+  {
+    "hanzi": "再见",
+    "pinyin": "zài jiàn",
+    "english": "goodbye"
+  },
+  {
+    "hanzi": "在",
+    "pinyin": "zài",
+    "english": "to exist; to be alive; (of sb or sth) to be (located) at"
+  },
+  {
+    "hanzi": "怎么",
+    "pinyin": "zěn me",
+    "english": "how?; what?"
+  },
+  {
+    "hanzi": "怎么样",
+    "pinyin": "zěn me yàng",
+    "english": "how?; how about?"
+  },
+  {
+    "hanzi": "这",
+    "pinyin": "zhè",
+    "english": "(pronoun) this; these; (bound form) this; the (followed by a noun)"
+  },
+  {
+    "hanzi": "中国",
+    "pinyin": "Zhōng guó",
+    "english": "China"
+  },
+  {
+    "hanzi": "中午",
+    "pinyin": "zhōng wǔ",
+    "english": "noon; midday"
+  },
+  {
+    "hanzi": "住",
+    "pinyin": "zhù",
+    "english": "to live; to dwell"
+  },
+  {
+    "hanzi": "桌子",
+    "pinyin": "zhuō zi",
+    "english": "table; desk"
+  },
+  {
+    "hanzi": "字",
+    "pinyin": "zì",
+    "english": "letter; symbol"
+  },
+  {
+    "hanzi": "昨天",
+    "pinyin": "zuó tiān",
+    "english": "yesterday"
+  },
+  {
+    "hanzi": "坐",
+    "pinyin": "zuò",
+    "english": "to sit; to take a seat"
+  },
+  {
+    "hanzi": "做",
+    "pinyin": "zuò",
+    "english": "to make; to produce; to write; to compose"
+  }
+]
