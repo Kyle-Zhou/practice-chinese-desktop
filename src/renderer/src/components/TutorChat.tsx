@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { nextCheckpoint, planProgress } from '@shared/plan'
 import { speakableText } from '@shared/text'
-import type { AppSettings, Correction, TutorMessage, TutorSession, VocabCandidate } from '@shared/types'
+import type { AppSettings, Correction, TutorMessage, TutorSession, VocabCandidate, VoiceMode } from '@shared/types'
 import { useTtsPlayer } from '../hooks/useTtsPlayer'
 import { useVoiceLoop } from '../hooks/useVoiceLoop'
+import SessionSummarizing from './SessionSummarizing'
 import VoiceOverlay, { type VoiceStatus } from './VoiceOverlay'
 
 interface Props {
@@ -13,6 +14,9 @@ interface Props {
 }
 
 type Phase = 'idle' | 'opening' | 'transcribing' | 'thinking' | 'replying' | 'analyzing'
+
+/** Floor on how long the "wrapping up" screen stays visible, so it never flashes. */
+const MIN_ENDING_MS = 700
 
 const DEFAULT_SETTINGS: AppSettings = {
   sttProvider: 'openai',
@@ -201,13 +205,22 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
   }
 
   async function handleEndSession(): Promise<void> {
+    const startedAt = Date.now()
     setEnding(true)
     tts.cancel()
+    // The summary usually takes seconds, but a cached summary or an early failure can come
+    // back almost instantly — and a screen that appears for 100ms is a flicker, not feedback.
+    const settle = async (): Promise<void> => {
+      const remaining = MIN_ENDING_MS - (Date.now() - startedAt)
+      if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, remaining))
+    }
     try {
       if (turnRef.current) await turnRef.current.catch(() => undefined)
       await window.api.tutor.endSession(sessionId)
+      await settle()
       onComplete(sessionId)
     } catch (err) {
+      await settle()
       setError(err instanceof Error ? err.message : String(err))
       setEnding(false)
     }
@@ -220,9 +233,35 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
     void window.api.settings.update({ autoSpeak: next })
   }
 
+  /**
+   * How you take a turn is something you change mid-conversation (a room gets noisy, someone
+   * walks in), so it lives in the session controls rather than only in Settings. The choice is
+   * still persisted, so it carries to the next session.
+   */
+  function toggleVoiceMode(): void {
+    const next: VoiceMode = effective.voiceMode === 'handsFree' ? 'pushToTalk' : 'handsFree'
+    // Flush anything being held down before the press handlers stop applying.
+    if (voice.micState === 'capturing') voice.pressEnd()
+    setSettings({ ...effective, voiceMode: next })
+    // Hands-free only listens on the voice screen, so switching to it there goes with it.
+    if (next === 'handsFree') setVoiceView(true)
+    void window.api.settings.update({ voiceMode: next })
+  }
+
   if (!session || !settings) return <p>Loading session…</p>
 
   const progress = planProgress(session.plan, completedIds)
+
+  // Ending covers both views: whichever one you pressed it from, the wait looks the same.
+  if (ending)
+    return (
+      <SessionSummarizing
+        themeName={session.scenarioName}
+        progress={progress}
+        correctionCount={corrections.length}
+        vocabCount={vocabAdded.length}
+      />
+    )
   const next = nextCheckpoint(session.plan, completedIds)
   const busy = phase !== 'idle'
   const capturing = voice.micState === 'capturing'
@@ -256,6 +295,10 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
         themeName={session.scenarioName}
         error={combinedError}
         ending={ending}
+        voiceMode={effective.voiceMode}
+        onToggleVoiceMode={toggleVoiceMode}
+        onPressStart={voice.pressStart}
+        onPressEnd={voice.pressEnd}
         onToggleMute={() => setMuted((m) => !m)}
         onShowChat={() => setVoiceView(false)}
         onEnd={handleEndSession}
@@ -271,11 +314,20 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
         </button>
         <h3 className="tutor-scenario-name">{session.scenarioName}</h3>
         <div className="tutor-toolbar-actions">
-          {settings.voiceMode === 'handsFree' && (
-            <button className="btn btn-toggle-on" onClick={() => setVoiceView(true)} title="Back to hands-free voice">
-              🎙 Voice
-            </button>
-          )}
+          <button className="btn" onClick={() => setVoiceView(true)} title="Back to the voice screen">
+            🎙 Voice
+          </button>
+          <button
+            className="btn"
+            onClick={toggleVoiceMode}
+            title={
+              effective.voiceMode === 'pushToTalk'
+                ? 'Push to talk — click to switch to hands-free'
+                : 'Hands-free — click to switch to push to talk'
+            }
+          >
+            {effective.voiceMode === 'pushToTalk' ? '✋ Push to talk' : '🎙 Hands-free'}
+          </button>
           <button
             className={`btn ${settings.autoSpeak ? 'btn-toggle-on' : ''}`}
             onClick={toggleAutoSpeak}
