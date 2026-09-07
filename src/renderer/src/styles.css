@@ -1303,3 +1303,436 @@ input[type='radio'] {
   color: var(--ink);
   font-weight: 750;
 }
+
+/* --- Dictionary quick-add ---
+   The results list is an overlay, so it needs the one shadow-free way to sit above the form:
+   a 2px ink-weight border on white. */
+
+.dict-search {
+  position: relative;
+  margin-bottom: 6px;
+}
+
+.dict-search-input {
+  width: 100%;
+  border-radius: var(--r-pill);
+  padding-left: 18px;
+}
+
+.dict-results {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--paper);
+  border: var(--bw) solid var(--ink);
+  border-radius: var(--r-lg);
+}
+
+.dict-result {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border: none;
+  border-radius: var(--r-md);
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.dict-result-active {
+  background: var(--yellow-soft);
+}
+
+.dict-result-hanzi {
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.dict-result-pinyin {
+  color: var(--ink-2);
+  font-size: 13.5px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.dict-result-english {
+  color: var(--ink-3);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dict-empty {
+  padding: 10px 12px;
+  color: var(--ink-3);
+  font-size: 13.5px;
+}
+
+.card-form-hint {
+  margin: 0 0 14px;
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+/* --- Learn: home-screen entry point --- */
+
+.learn-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 22px;
+  padding: 18px 22px;
+  background: var(--yellow-soft);
+  border: var(--bw) solid var(--yellow);
+  border-radius: var(--r-xl);
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--ink);
+  transition: background-color 0.14s ease;
+}
+
+.learn-banner:hover {
+  background: var(--yellow);
+}
+
+.learn-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 16.5px;
+}
+
+.learn-banner-go {
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+/* --- Learn: lesson path --- */
+
+.lesson-path-intro {
+  margin: -6px 0 26px;
+  color: var(--ink-2);
+  max-width: 620px;
+}
+
+.lesson-level {
+  margin-bottom: 32px;
+}
+
+.lesson-level-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.lesson-level-head h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.lesson-level-count {
+  color: var(--ink-3);
+  font-size: 13.5px;
+  font-weight: 650;
+}
+
+.lesson-level-bar {
+  height: 12px;
+  background: var(--paper);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.lesson-level-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: var(--r-pill);
+  transition: width 0.3s ease;
+}
+
+.lesson-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.lesson-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  background: var(--paper);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--ink);
+  transition: border-color 0.14s ease, background-color 0.14s ease;
+}
+
+.lesson-chip:hover {
+  border-color: var(--yellow);
+}
+
+.lesson-chip-name {
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.lesson-chip-meta {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.lesson-chip-completed {
+  background: var(--green-soft);
+  border-color: var(--green-light);
+}
+
+.lesson-chip-completed .lesson-chip-meta {
+  color: var(--green-ink);
+}
+
+.lesson-chip-in_progress {
+  background: var(--yellow-soft);
+  border-color: var(--yellow);
+}
+
+/* Locked lessons are dimmed but still pressable — the escape hatch for anyone who already
+   knows the early vocabulary. */
+.lesson-chip-locked {
+  opacity: 0.5;
+}
+
+/* --- Learn: lesson --- */
+
+.lesson-title {
+  font-weight: 750;
+  font-size: 14px;
+}
+
+.lesson-teach {
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-xl);
+  padding: 32px 28px;
+  text-align: center;
+  margin: 22px 0;
+}
+
+.lesson-word {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.lesson-speak {
+  flex-shrink: 0;
+}
+
+.lesson-examples {
+  list-style: none;
+  margin: 26px 0 0;
+  padding: 20px 0 0;
+  border-top: var(--bw) solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+}
+
+.lesson-examples li {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.lesson-example-hanzi {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 21px;
+  font-weight: 650;
+  color: var(--ink);
+  text-align: left;
+}
+
+.lesson-example-hanzi:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--yellow);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 3px;
+}
+
+.lesson-example-pinyin {
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.lesson-example-english {
+  color: var(--ink-3);
+  font-size: 14px;
+}
+
+.lesson-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+/* --- Learn: quiz --- */
+
+.quiz-card {
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-xl);
+  padding: 30px 28px;
+  margin-top: 18px;
+  text-align: center;
+}
+
+.quiz-kind {
+  margin: 0 0 18px;
+  color: var(--ink-3);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.quiz-prompt-hanzi {
+  margin: 0 0 26px;
+  font-size: 46px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.quiz-prompt-english {
+  margin: 0 0 26px;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.quiz-replay {
+  margin-bottom: 26px;
+}
+
+.quiz-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quiz-option {
+  padding: 18px 16px;
+  background: var(--fill);
+  border: var(--bw) solid transparent;
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+  transition: background-color 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
+}
+
+.quiz-option:hover:not(:disabled) {
+  background: var(--fill-press);
+}
+
+.quiz-option:disabled {
+  cursor: default;
+}
+
+.quiz-option-right {
+  background: var(--green-soft);
+  border-color: var(--green);
+  color: var(--green-ink);
+}
+
+.quiz-option-wrong {
+  background: var(--red-soft);
+  border-color: var(--red);
+  color: var(--red-ink);
+}
+
+.quiz-option-dim {
+  opacity: 0.4;
+}
+
+.quiz-type-form {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.quiz-type-form input {
+  flex: 1;
+  max-width: 320px;
+  border-radius: var(--r-pill);
+  padding-left: 18px;
+  text-align: center;
+  font-size: 17px;
+}
+
+.quiz-verdict {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  text-align: left;
+  margin-top: 22px;
+  padding: 16px 20px;
+  border-radius: var(--r-lg);
+  font-size: 15px;
+}
+
+.quiz-verdict-right {
+  background: var(--green-soft);
+  color: var(--green-ink);
+}
+
+.quiz-verdict-wrong {
+  background: var(--red-soft);
+  color: var(--red-ink);
+}
+
+.quiz-verdict-word {
+  margin: 4px 0 0;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.lesson-score {
+  margin: -8px 0 22px;
+  font-size: 19px;
+  font-weight: 700;
+}

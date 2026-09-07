@@ -1,8 +1,9 @@
 import { app } from 'electron'
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import { getMeta, seedDeck, setMeta, upsertScenario } from './db'
-import type { NewCardInput, PlanCheckpoint, ScenarioKind } from '../shared/types'
+import { getMeta, seedDeck, setMeta, upsertLesson, upsertScenario } from './db'
+import { ensureProgressDeck } from './lessons'
+import type { LessonRecord, NewCardInput, PlanCheckpoint, ScenarioKind } from '../shared/types'
 
 interface SeedWord {
   hanzi: string
@@ -19,7 +20,7 @@ interface SeedScenario {
 }
 
 /** Bump this whenever seed/*.json content changes so existing installs pick up new decks/scenarios. */
-const SEED_VERSION = '4'
+const SEED_VERSION = '5'
 
 const SEED_DECKS = [
   { file: 'hsk1.json', name: 'HSK 1', description: 'HSK Level 1 vocabulary (150 words)' },
@@ -27,8 +28,11 @@ const SEED_DECKS = [
   { file: 'hsk3.json', name: 'HSK 3', description: 'HSK Level 3 vocabulary (300 words)' }
 ]
 
-function seedDir(): string {
-  // In dev, seed/ lives at the project root. In a packaged build it's bundled as an extra resource.
+export function seedDir(): string {
+  // In dev, seed/ lives at the project root. In a packaged build it's bundled as an extra
+  // resource. CHINESE_ANKI_SEED_DIR overrides both, which is what smoke runs use.
+  const override = process.env['CHINESE_ANKI_SEED_DIR']
+  if (override) return override
   return app.isPackaged ? join(process.resourcesPath, 'seed') : join(app.getAppPath(), 'seed')
 }
 
@@ -53,6 +57,17 @@ export function seedIfNeeded(): void {
   for (const scenario of scenarios) {
     upsertScenario(scenario)
   }
+
+  // Lessons are upserted like scenarios: progress is keyed by lesson id, so refreshed content
+  // (better example sentences, say) reaches existing installs without resetting anyone's path.
+  const lessons = JSON.parse(readFileSync(join(dir, 'lessons.json'), 'utf-8')) as LessonRecord[]
+  for (const lesson of lessons) {
+    upsertLesson(lesson)
+  }
+
+  // Create the progress deck up front so it can be browsed (and quick-added to) before the
+  // first lesson is finished.
+  ensureProgressDeck()
 
   setMeta('seed_version', SEED_VERSION)
 }

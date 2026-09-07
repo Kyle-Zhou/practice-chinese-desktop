@@ -1,21 +1,28 @@
 import { useEffect, useState } from 'react'
-import type { Deck } from '@shared/types'
+import type { Deck, LessonSummary } from '@shared/types'
 
 interface Props {
   onStudy: (deckId: number | null) => void
   onManage: (deckId: number) => void
+  onLearn: () => void
 }
 
-export default function DeckList({ onStudy, onManage }: Props): React.JSX.Element {
+export default function DeckList({ onStudy, onManage, onLearn }: Props): React.JSX.Element {
   const [decks, setDecks] = useState<Deck[]>([])
   const [allDueCount, setAllDueCount] = useState(0)
+  const [lessons, setLessons] = useState<LessonSummary[]>([])
   const [newDeckName, setNewDeckName] = useState('')
   const [loading, setLoading] = useState(true)
 
   async function refresh(): Promise<void> {
-    const [deckList, dueCount] = await Promise.all([window.api.decks.list(), window.api.decks.allDueCount()])
+    const [deckList, dueCount, lessonList] = await Promise.all([
+      window.api.decks.list(),
+      window.api.decks.allDueCount(),
+      window.api.lessons.list()
+    ])
     setDecks(deckList)
     setAllDueCount(dueCount)
+    setLessons(lessonList)
     setLoading(false)
   }
 
@@ -40,6 +47,9 @@ export default function DeckList({ onStudy, onManage }: Props): React.JSX.Elemen
 
   if (loading) return <p>Loading decks…</p>
 
+  const completed = lessons.filter((lesson) => lesson.status === 'completed').length
+  const next = lessons.find((lesson) => lesson.status !== 'completed')
+
   return (
     <div className="deck-list">
       <div className="deck-list-toolbar">
@@ -47,6 +57,17 @@ export default function DeckList({ onStudy, onManage }: Props): React.JSX.Elemen
           Study All Decks ({allDueCount} due)
         </button>
       </div>
+
+      {/* Reviews only work once you know some words, so the lesson path gets top billing. */}
+      <button className="learn-banner" onClick={onLearn}>
+        <span className="learn-banner-text">
+          <strong>{next ? `Up next: ${next.name}` : 'Every lesson complete'}</strong>
+          <span className="deck-stats">
+            {completed} of {lessons.length} lessons done · learn new words, then review them here
+          </span>
+        </span>
+        <span className="learn-banner-go">Learn →</span>
+      </button>
 
       <ul className="deck-cards">
         {decks.map((deck) => (

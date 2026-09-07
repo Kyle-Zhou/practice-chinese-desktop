@@ -3,7 +3,12 @@ import type {
   AppSettings,
   Card,
   Deck,
+  DictionaryEntry,
   Grade,
+  LessonCompletion,
+  LessonDetail,
+  LessonResultInput,
+  LessonSummary,
   NewCardInput,
   NewDeckInput,
   Scenario,
@@ -40,6 +45,18 @@ const api = {
       ipcRenderer.invoke('study:dueCards', deckId, limit),
     submitReview: (cardId: number, grade: Grade): Promise<Card> =>
       ipcRenderer.invoke('study:submitReview', cardId, grade)
+  },
+  dictionary: {
+    ready: (): Promise<boolean> => ipcRenderer.invoke('dictionary:ready'),
+    search: (query: string, limit?: number): Promise<DictionaryEntry[]> =>
+      ipcRenderer.invoke('dictionary:search', query, limit)
+  },
+  lessons: {
+    list: (): Promise<LessonSummary[]> => ipcRenderer.invoke('lessons:list'),
+    get: (id: string): Promise<LessonDetail | null> => ipcRenderer.invoke('lessons:get', id),
+    start: (id: string): Promise<void> => ipcRenderer.invoke('lessons:start', id),
+    complete: (id: string, result: LessonResultInput): Promise<LessonCompletion> =>
+      ipcRenderer.invoke('lessons:complete', id, result)
   },
   settings: {
     get: (): Promise<AppSettings> => ipcRenderer.invoke('settings:get'),

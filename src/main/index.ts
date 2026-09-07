@@ -1,8 +1,9 @@
 import { app, BrowserWindow, screen, shell } from 'electron'
 import { join } from 'path'
 import { initDatabase } from './db'
+import { importDictionaryIfNeeded } from './dictionary'
 import { registerIpcHandlers } from './ipc'
-import { seedIfNeeded } from './seed'
+import { seedDir, seedIfNeeded } from './seed'
 
 const isDev = !app.isPackaged
 
@@ -35,6 +36,9 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+    // The one-time CC-CEDICT import blocks the main process for a few seconds. Run it just
+    // after the first paint so a fresh install opens instantly and only the dictionary lags.
+    setTimeout(() => importDictionaryIfNeeded(seedDir()), 500)
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
