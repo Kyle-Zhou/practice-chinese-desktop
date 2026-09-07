@@ -185,6 +185,29 @@ export default function Settings({ onExit }: Props): React.JSX.Element {
           </p>
         )}
       </div>
+
+      <div className="settings-card">
+        <h3>Credits</h3>
+        <p className="deck-description">
+          Dictionary lookups use{' '}
+          <a href="https://www.mdbg.net/chinese/dictionary?page=cc-cedict" target="_blank" rel="noreferrer">
+            CC-CEDICT
+          </a>
+          , licensed{' '}
+          <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer">
+            CC BY-SA 4.0
+          </a>
+          . Lesson example sentences come from{' '}
+          <a href="https://tatoeba.org" target="_blank" rel="noreferrer">
+            Tatoeba
+          </a>
+          , licensed{' '}
+          <a href="https://creativecommons.org/licenses/by/2.0/fr/" target="_blank" rel="noreferrer">
+            CC BY 2.0 FR
+          </a>
+          .
+        </p>
+      </div>
     </div>
   )
 }

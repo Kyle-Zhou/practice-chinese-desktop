@@ -3,12 +3,19 @@ import { app } from 'electron'
 import { join } from 'path'
 import { NEW_CARD_STATE, schedule } from '../shared/sm2'
 import { mergeCompleted, planProgress } from '../shared/plan'
+import { normalizePinyin } from '../shared/pinyin'
 import type {
   Card,
   Correction,
   CorrectionMode,
   Deck,
+  DictionaryEntry,
   Grade,
+  LessonDetail,
+  LessonRecord,
+  LessonStatus,
+  LessonSummary,
+  LessonWord,
   NewCardInput,
   NewDeckInput,
   PlanCheckpoint,
@@ -82,6 +89,46 @@ function migrate(): void {
       description TEXT NOT NULL,
       plan TEXT NOT NULL,
       created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS dictionary (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      simplified TEXT NOT NULL,
+      traditional TEXT NOT NULL,
+      pinyin TEXT NOT NULL,
+      pinyin_normalized TEXT NOT NULL,
+      english TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_dictionary_simplified ON dictionary(simplified);
+    CREATE INDEX IF NOT EXISTS idx_dictionary_traditional ON dictionary(traditional);
+    CREATE INDEX IF NOT EXISTS idx_dictionary_pinyin ON dictionary(pinyin_normalized);
+
+    -- External-content FTS index: the glosses live in dictionary, so this only stores the
+    -- inverted index and is rebuilt wholesale after an import.
+    CREATE VIRTUAL TABLE IF NOT EXISTS dictionary_fts USING fts5(
+      english,
+      content='dictionary',
+      content_rowid='id',
+      tokenize='unicode61'
+    );
+
+    CREATE TABLE IF NOT EXISTS lessons (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      level INTEGER NOT NULL,
+      sort_order INTEGER NOT NULL,
+      words TEXT NOT NULL
+    );
+
+    -- A row exists only once a lesson has been started; everything else is derived.
+    CREATE TABLE IF NOT EXISTS lesson_progress (
+      lesson_id TEXT PRIMARY KEY REFERENCES lessons(id) ON DELETE CASCADE,
+      status TEXT NOT NULL,
+      correct INTEGER,
+      total INTEGER,
+      started_at TEXT NOT NULL,
+      completed_at TEXT
     );
 
     CREATE TABLE IF NOT EXISTS tutor_sessions (
@@ -570,4 +617,284 @@ export function completeTutorSession(sessionId: number, summary: TutorSummary): 
     sessionId
   )
   return getTutorSession(sessionId)
+}
+
+// --- Dictionary (CC-CEDICT) ---
+
+export interface DictionaryImportRow {
+  simplified: string
+  traditional: string
+  pinyin: string
+  pinyinNormalized: string
+  english: string
+}
+
+interface DictionaryRow {
+  id: number
+  simplified: string
+  traditional: string
+  pinyin: string
+  english: string
+}
+
+/** Replaces the whole dictionary in one transaction, then rebuilds the external-content FTS index. */
+export function replaceDictionary(rows: DictionaryImportRow[]): void {
+  const insert = db.prepare(
+    `INSERT INTO dictionary (simplified, traditional, pinyin, pinyin_normalized, english)
+     VALUES (@simplified, @traditional, @pinyin, @pinyinNormalized, @english)`
+  )
+  const tx = db.transaction(() => {
+    db.exec(`DELETE FROM dictionary`)
+    for (const row of rows) insert.run(row)
+    db.exec(`INSERT INTO dictionary_fts(dictionary_fts) VALUES('rebuild')`)
+  })
+  tx()
+}
+
+export function dictionaryEntryCount(): number {
+  return (db.prepare(`SELECT COUNT(*) AS n FROM dictionary`).get() as { n: number }).n
+}
+
+const DICTIONARY_SELECT = `SELECT id, simplified, traditional, pinyin, english FROM dictionary`
+
+const HAS_HANZI = /[㐀-鿿]/
+
+/** Entries that only redirect elsewhere are legitimate but never what a learner is looking for. */
+const LOW_VALUE_GLOSS = /^(variant of|old variant of|see |surname )/i
+
+let commonWords: Set<string> | null = null
+
+/**
+ * CC-CEDICT carries no frequency data, so an obscure entry can outrank the word a learner
+ * actually meant. The seeded HSK 1–3 vocabulary is a good enough frequency proxy: if a
+ * headword is on it, it is almost certainly the intended answer.
+ */
+function commonWordSet(): Set<string> {
+  if (commonWords) return commonWords
+  commonWords = new Set()
+  for (const row of db.prepare(`SELECT words FROM lessons`).all() as { words: string }[]) {
+    for (const word of JSON.parse(row.words) as LessonWord[]) commonWords.add(word.hanzi)
+  }
+  return commonWords
+}
+
+function dictionaryFromRow(row: DictionaryRow): DictionaryEntry {
+  return {
+    id: row.id,
+    simplified: row.simplified,
+    traditional: row.traditional,
+    pinyin: row.pinyin,
+    english: row.english
+  }
+}
+
+/**
+ * Turns free text into an FTS5 MATCH expression: every word is quoted (so punctuation and
+ * reserved words like NOT can't break the query) and the last one is a prefix term, which is
+ * what makes the dropdown feel live while typing.
+ */
+function ftsQuery(query: string): string | null {
+  const terms = query.toLowerCase().match(/[a-z0-9]+/g)
+  if (!terms || terms.length === 0) return null
+  return terms.map((term, i) => (i === terms.length - 1 ? `"${term}"*` : `"${term}"`)).join(' ')
+}
+
+/**
+ * BM25 puts the obvious answer surprisingly deep — for "cup" it ranks 杯子 65th, behind 杯盖
+ * and cupidity — so we pull a wide window of matches and re-rank them by how directly a gloss
+ * answers the query, keeping BM25 order only as the tiebreak.
+ */
+function searchEnglish(query: string, limit: number): DictionaryRow[] {
+  const match = ftsQuery(query)
+  if (!match) return []
+  const rows = db
+    .prepare(
+      `SELECT dictionary.id, dictionary.simplified, dictionary.traditional, dictionary.pinyin, dictionary.english
+       FROM dictionary_fts JOIN dictionary ON dictionary.id = dictionary_fts.rowid
+       WHERE dictionary_fts MATCH @match ORDER BY rank LIMIT @window`
+    )
+    .all({ match, window: Math.max(200, limit * 10) }) as DictionaryRow[]
+
+  const needle = query.trim().toLowerCase()
+  const common = commonWordSet()
+  const score = (row: DictionaryRow): number => {
+    const boost = common.has(row.simplified) ? -0.5 : 0
+    const glosses = row.english.split('; ').map((g) => g.trim().toLowerCase())
+    if (LOW_VALUE_GLOSS.test(row.english)) return 4
+    if (glosses.includes(needle) || glosses.includes(`to ${needle}`)) return boost
+    if (glosses.some((g) => g.startsWith(needle))) return 1 + boost
+    return 2 + boost
+  }
+  return rows
+    .map((row, index) => ({ row, index, score: score(row) }))
+    .sort((a, b) => a.score - b.score || a.index - b.index)
+    .map((entry) => entry.row)
+}
+
+/**
+ * One search box for three kinds of query. Hanzi input matches headwords, latin input is tried
+ * as pinyin (toneless, so "nihao" and "nǐ hǎo" both work) and as English.
+ *
+ * Each strategy contributes a tier — an exact headword beats a prefix beats an English gloss —
+ * but tiers are not absolute: a cross-reference-only entry ("variant of 杯") is pushed below
+ * every real match, and a word from the HSK lists is pulled up, because that is nearly always
+ * the one the learner meant.
+ */
+export function searchDictionary(query: string, limit = 20): DictionaryEntry[] {
+  const trimmed = query.trim()
+  if (!trimmed) return []
+
+  const common = commonWordSet()
+  const scored = new Map<number, { row: DictionaryRow; score: number; order: number }>()
+  let order = 0
+
+  // `preRanked` rows arrive in their own meaningful order (searchEnglish has already weighed
+  // gloss quality against frequency), so they keep it; the others are ranked here.
+  const collect = (rows: DictionaryRow[], tier: number, preRanked = false): void => {
+    for (const row of rows) {
+      const score = preRanked
+        ? tier * 10
+        : tier * 10 + (LOW_VALUE_GLOSS.test(row.english) ? 12 : 0) - (common.has(row.simplified) ? 1 : 0)
+      const existing = scored.get(row.id)
+      if (!existing || score < existing.score) scored.set(row.id, { row, score, order: existing?.order ?? order++ })
+    }
+  }
+
+  // Rank over a wide slice rather than the first `limit` rows: the 5th 'mao' entry by rowid is
+  // an obsolete variant, while 猫 is much further down the table.
+  const window = Math.max(60, limit * 5)
+  const run = (sql: string, params: Record<string, unknown>): DictionaryRow[] =>
+    db.prepare(sql).all({ window, ...params }) as DictionaryRow[]
+
+  if (HAS_HANZI.test(trimmed)) {
+    collect(
+      run(
+        `${DICTIONARY_SELECT} WHERE simplified = @q OR traditional = @q ORDER BY LENGTH(simplified), id LIMIT @window`,
+        { q: trimmed }
+      ),
+      0
+    )
+    collect(
+      run(`${DICTIONARY_SELECT} WHERE simplified LIKE @prefix ORDER BY LENGTH(simplified), id LIMIT @window`, {
+        prefix: `${trimmed}%`
+      }),
+      1
+    )
+  } else {
+    const pinyin = normalizePinyin(trimmed)
+    if (pinyin) {
+      collect(
+        run(`${DICTIONARY_SELECT} WHERE pinyin_normalized = @pinyin ORDER BY LENGTH(simplified), id LIMIT @window`, {
+          pinyin
+        }),
+        0
+      )
+      collect(
+        run(`${DICTIONARY_SELECT} WHERE pinyin_normalized LIKE @prefix ORDER BY LENGTH(simplified), id LIMIT @window`, {
+          prefix: `${pinyin}%`
+        }),
+        1
+      )
+    }
+    collect(searchEnglish(trimmed, limit), 2, true)
+  }
+
+  return [...scored.values()]
+    .sort((a, b) => a.score - b.score || a.order - b.order)
+    .slice(0, limit)
+    .map((entry) => dictionaryFromRow(entry.row))
+}
+
+// --- Lessons ---
+
+interface LessonRow {
+  id: string
+  name: string
+  level: number
+  sort_order: number
+  words: string
+  status: LessonStatus | null
+  correct: number | null
+  total: number | null
+  completed_at: string | null
+}
+
+const LESSON_SELECT = `
+  SELECT l.id, l.name, l.level, l.sort_order, l.words,
+         p.status, p.correct, p.total, p.completed_at
+  FROM lessons l LEFT JOIN lesson_progress p ON p.lesson_id = l.id`
+
+function lessonSummaryFromRow(row: LessonRow, status: LessonStatus): LessonSummary {
+  return {
+    id: row.id,
+    name: row.name,
+    level: row.level,
+    order: row.sort_order,
+    wordCount: (JSON.parse(row.words) as LessonWord[]).length,
+    status,
+    correct: row.correct,
+    total: row.total,
+    completedAt: row.completed_at
+  }
+}
+
+export function upsertLesson(record: LessonRecord): void {
+  db.prepare(
+    `INSERT INTO lessons (id, name, level, sort_order, words) VALUES (@id, @name, @level, @order, @words)
+     ON CONFLICT(id) DO UPDATE SET name = excluded.name, level = excluded.level,
+       sort_order = excluded.sort_order, words = excluded.words`
+  ).run({ ...record, words: JSON.stringify(record.words) })
+}
+
+/**
+ * Lessons unlock in order: the next one opens when the previous is finished. Availability is
+ * derived rather than stored so re-seeded or reordered content can never leave it stale.
+ */
+export function listLessons(): LessonSummary[] {
+  const rows = db.prepare(`${LESSON_SELECT} ORDER BY l.sort_order ASC`).all() as LessonRow[]
+  let previousCompleted = true
+  return rows.map((row) => {
+    const status: LessonStatus = row.status ?? (previousCompleted ? 'available' : 'locked')
+    previousCompleted = row.status === 'completed'
+    return lessonSummaryFromRow(row, status)
+  })
+}
+
+export function getLesson(id: string): LessonDetail | null {
+  const summary = listLessons().find((lesson) => lesson.id === id)
+  if (!summary) return null
+  const rows = db.prepare(`SELECT id, words FROM lessons WHERE level = ? ORDER BY sort_order ASC`).all(summary.level) as {
+    id: string
+    words: string
+  }[]
+
+  const words: LessonWord[] = []
+  const distractorPool: LessonWord[] = []
+  for (const row of rows) {
+    const parsed = JSON.parse(row.words) as LessonWord[]
+    if (row.id === id) words.push(...parsed)
+    else distractorPool.push(...parsed)
+  }
+  return { ...summary, words, distractorPool }
+}
+
+export function markLessonStarted(id: string): void {
+  db.prepare(
+    `INSERT INTO lesson_progress (lesson_id, status, started_at) VALUES (?, 'in_progress', ?)
+     ON CONFLICT(lesson_id) DO NOTHING`
+  ).run(id, new Date().toISOString())
+}
+
+export function markLessonCompleted(id: string, correct: number, total: number): void {
+  const now = new Date().toISOString()
+  db.prepare(
+    `INSERT INTO lesson_progress (lesson_id, status, correct, total, started_at, completed_at)
+     VALUES (@id, 'completed', @correct, @total, @now, @now)
+     ON CONFLICT(lesson_id) DO UPDATE SET status = 'completed', correct = @correct, total = @total, completed_at = @now`
+  ).run({ id, correct, total, now })
+}
+
+/** True if this specific deck already has a card for the hanzi. */
+export function cardExistsInDeck(deckId: number, hanzi: string): boolean {
+  return db.prepare(`SELECT 1 FROM cards WHERE deck_id = ? AND hanzi = ? LIMIT 1`).get(deckId, hanzi) !== undefined
 }

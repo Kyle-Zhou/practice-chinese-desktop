@@ -227,3 +227,77 @@ export interface TranscribeResult {
   /** Wall-clock milliseconds spent in the STT provider; shown in the UI for tuning. */
   durationMs: number
 }
+
+// --- Dictionary ---
+
+/** One CC-CEDICT headword. `pinyin` is the display form with tone marks. */
+export interface DictionaryEntry {
+  id: number
+  simplified: string
+  traditional: string
+  pinyin: string
+  english: string
+}
+
+// --- Lessons ---
+
+export interface LessonExample {
+  hanzi: string
+  pinyin: string
+  english: string
+}
+
+export interface LessonWord {
+  hanzi: string
+  pinyin: string
+  english: string
+  examples: LessonExample[]
+}
+
+/** A lesson exactly as it ships in seed/lessons.json. */
+export interface LessonRecord {
+  id: string
+  name: string
+  level: number
+  order: number
+  words: LessonWord[]
+}
+
+/**
+ * 'locked' and 'available' are derived from where the lesson sits in the sequence;
+ * 'in_progress' and 'completed' come from stored progress.
+ */
+export type LessonStatus = 'locked' | 'available' | 'in_progress' | 'completed'
+
+export interface LessonSummary {
+  id: string
+  name: string
+  level: number
+  order: number
+  wordCount: number
+  status: LessonStatus
+  /** Quiz result of the most recent completion, or null if never finished. */
+  correct: number | null
+  total: number | null
+  completedAt: string | null
+}
+
+export interface LessonDetail extends LessonSummary {
+  words: LessonWord[]
+  /** Words from the other lessons at this level, used as quiz distractors. */
+  distractorPool: LessonWord[]
+}
+
+export interface LessonResultInput {
+  correct: number
+  total: number
+}
+
+export interface LessonCompletion {
+  /** Words that became new cards in the progress deck. */
+  added: VocabCandidate[]
+  /** Words skipped because the progress deck already had them. */
+  alreadyInDeck: number
+  deckId: number
+  deckName: string
+}

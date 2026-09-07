@@ -1,10 +1,13 @@
 import { ipcMain, systemPreferences } from 'electron'
 import * as db from './db'
+import * as lessons from './lessons'
 import * as settings from './settings'
 import * as tutor from './tutor'
+import { dictionaryReady } from './dictionary'
 import type {
   AppSettings,
   Grade,
+  LessonResultInput,
   NewCardInput,
   NewDeckInput,
   SecretName,
@@ -27,6 +30,16 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('study:dueCards', (_e, deckId: number | null, limit?: number) => db.getDueCards(deckId, limit))
   ipcMain.handle('study:submitReview', (_e, cardId: number, grade: Grade) => db.submitReview(cardId, grade))
+
+  ipcMain.handle('dictionary:ready', () => dictionaryReady())
+  ipcMain.handle('dictionary:search', (_e, query: string, limit?: number) => db.searchDictionary(query, limit))
+
+  ipcMain.handle('lessons:list', () => db.listLessons())
+  ipcMain.handle('lessons:get', (_e, id: string) => db.getLesson(id))
+  ipcMain.handle('lessons:start', (_e, id: string) => db.markLessonStarted(id))
+  ipcMain.handle('lessons:complete', (_e, id: string, result: LessonResultInput) =>
+    lessons.completeLesson(id, result)
+  )
 
   ipcMain.handle('settings:get', () => settings.getSettings())
   ipcMain.handle('settings:update', (_e, patch: Partial<AppSettings>) => settings.updateSettings(patch))

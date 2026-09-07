@@ -44,3 +44,16 @@ export function splitSentences(text: string): string[] {
 export function speakableText(text: string): string {
   return text.replace(/[（(][^）)]*[）)]/g, '').trim()
 }
+
+/**
+ * CC-CEDICT glosses run long ("to love; to be fond of; to like; affection"). Two senses is
+ * enough to identify a word in a list or a quiz option without a wall of text.
+ */
+export function shortGloss(english: string, senses = 2): string {
+  return english
+    .split(';')
+    .slice(0, senses)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join('; ')
+}

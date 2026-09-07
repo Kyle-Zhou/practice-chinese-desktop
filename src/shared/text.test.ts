@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SentenceSplitter, speakableText, splitSentences } from './text'
+import { SentenceSplitter, shortGloss, speakableText, splitSentences } from './text'
 
 describe('SentenceSplitter', () => {
   it('emits sentences as soon as a terminator arrives across chunks', () => {
@@ -20,5 +20,12 @@ describe('SentenceSplitter', () => {
 
   it('strips parenthetical asides for speech', () => {
     expect(speakableText('你可以说：我要一杯茶（wǒ yào yī bēi chá）。')).toBe('你可以说：我要一杯茶。')
+  })
+})
+
+describe('shortGloss', () => {
+  it('keeps the first senses only', () => {
+    expect(shortGloss('to love; to be fond of; to like; affection')).toBe('to love; to be fond of')
+    expect(shortGloss('cat')).toBe('cat')
   })
 })

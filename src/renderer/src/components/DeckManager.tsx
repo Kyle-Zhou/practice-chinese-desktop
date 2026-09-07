@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import type { Card } from '@shared/types'
+import DictionarySearch from './DictionarySearch'
+import { shortGloss } from '@shared/text'
+import type { Card, Deck } from '@shared/types'
 
 interface Props {
   deckId: number
@@ -10,11 +12,14 @@ const emptyForm = { hanzi: '', pinyin: '', english: '', audioPath: '', notes: ''
 
 export default function DeckManager({ deckId, onExit }: Props): React.JSX.Element {
   const [cards, setCards] = useState<Card[]>([])
+  const [deck, setDeck] = useState<Deck | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState<number | null>(null)
 
   async function refresh(): Promise<void> {
-    setCards(await window.api.cards.listForDeck(deckId))
+    const [deckCards, decks] = await Promise.all([window.api.cards.listForDeck(deckId), window.api.decks.list()])
+    setCards(deckCards)
+    setDeck(decks.find((d) => d.id === deckId) ?? null)
   }
 
   useEffect(() => {
@@ -75,11 +80,27 @@ export default function DeckManager({ deckId, onExit }: Props): React.JSX.Elemen
         <button className="btn" onClick={onExit}>
           ← Back to decks
         </button>
-        <span>{cards.length} cards</span>
+        <span>
+          {deck ? `${deck.name} · ` : ''}
+          {cards.length} cards
+        </span>
       </div>
 
       <form className="card-form" onSubmit={handleSubmit}>
         <h3>{editingId !== null ? 'Edit card' : 'Add card'}</h3>
+        <DictionarySearch
+          onPick={(entry) =>
+            setForm((current) => ({
+              ...current,
+              hanzi: entry.simplified,
+              pinyin: entry.pinyin,
+              english: shortGloss(entry.english, 3)
+            }))
+          }
+        />
+        <p className="card-form-hint">
+          Search by hanzi, pinyin, or English to fill the fields below — everything stays editable.
+        </p>
         <div className="card-form-grid">
           <input
             placeholder="Hanzi (e.g. 你好)"
