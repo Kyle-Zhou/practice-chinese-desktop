@@ -6,7 +6,6 @@ import Settings from './components/Settings'
 import TutorScenarioPicker from './components/TutorScenarioPicker'
 import TutorChat from './components/TutorChat'
 import TutorSummaryView from './components/TutorSummaryView'
-import type { TutorSummary } from '@shared/types'
 
 type View =
   | { name: 'decks' }
@@ -15,7 +14,7 @@ type View =
   | { name: 'settings' }
   | { name: 'tutorPicker' }
   | { name: 'tutorChat'; sessionId: number }
-  | { name: 'tutorSummary'; summary: TutorSummary; scenarioName: string }
+  | { name: 'tutorSummary'; sessionId: number }
 
 export default function App(): React.JSX.Element {
   const [view, setView] = useState<View>({ name: 'decks' })
@@ -33,39 +32,33 @@ export default function App(): React.JSX.Element {
           </button>
         </nav>
       </header>
-      <main className="app-main">
+      <main className={`app-main ${view.name === 'tutorChat' ? 'app-main-wide' : ''}`}>
         {view.name === 'decks' && (
           <DeckList
             onStudy={(deckId) => setView({ name: 'study', deckId })}
             onManage={(deckId) => setView({ name: 'manage', deckId })}
           />
         )}
-        {view.name === 'study' && (
-          <StudySession deckId={view.deckId} onExit={() => setView({ name: 'decks' })} />
-        )}
-        {view.name === 'manage' && (
-          <DeckManager deckId={view.deckId} onExit={() => setView({ name: 'decks' })} />
-        )}
+        {view.name === 'study' && <StudySession deckId={view.deckId} onExit={() => setView({ name: 'decks' })} />}
+        {view.name === 'manage' && <DeckManager deckId={view.deckId} onExit={() => setView({ name: 'decks' })} />}
         {view.name === 'settings' && <Settings onExit={() => setView({ name: 'decks' })} />}
         {view.name === 'tutorPicker' && (
           <TutorScenarioPicker
             onExit={() => setView({ name: 'decks' })}
-            onStart={(sessionId) => setView({ name: 'tutorChat', sessionId })}
+            onOpenSession={(sessionId) => setView({ name: 'tutorChat', sessionId })}
+            onViewSummary={(sessionId) => setView({ name: 'tutorSummary', sessionId })}
+            onOpenSettings={() => setView({ name: 'settings' })}
           />
         )}
         {view.name === 'tutorChat' && (
           <TutorChat
             sessionId={view.sessionId}
-            onExit={() => setView({ name: 'decks' })}
-            onComplete={(summary, scenarioName) => setView({ name: 'tutorSummary', summary, scenarioName })}
+            onExit={() => setView({ name: 'tutorPicker' })}
+            onComplete={(sessionId) => setView({ name: 'tutorSummary', sessionId })}
           />
         )}
         {view.name === 'tutorSummary' && (
-          <TutorSummaryView
-            summary={view.summary}
-            scenarioName={view.scenarioName}
-            onExit={() => setView({ name: 'decks' })}
-          />
+          <TutorSummaryView sessionId={view.sessionId} onExit={() => setView({ name: 'tutorPicker' })} />
         )}
       </main>
     </div>

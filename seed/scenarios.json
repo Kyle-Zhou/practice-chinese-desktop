@@ -2,58 +2,470 @@
   {
     "name": "Ordering at a Restaurant",
     "description": "You are a customer at a Chinese restaurant, practicing ordering food and drinks with the waiter.",
+    "tutorRole": "the waiter at a busy but friendly restaurant",
     "plan": [
-      { "id": "greet", "description": "Greet the waiter and ask to be seated or for a menu" },
-      { "id": "ask_recommendation", "description": "Ask the waiter for a recommendation" },
-      { "id": "order_dish", "description": "Order at least one dish" },
-      { "id": "order_drink", "description": "Order a drink" },
-      { "id": "ask_bill", "description": "Ask for the bill at the end of the meal" },
-      { "id": "goodbye", "description": "Thank the waiter and say goodbye" }
-    ]
+      {
+        "id": "greet",
+        "description": "Greet the waiter and ask for a table or a menu",
+        "keyPhrases": [
+          "你好",
+          "我们两个人",
+          "请给我菜单"
+        ]
+      },
+      {
+        "id": "ask_recommendation",
+        "description": "Ask the waiter for a recommendation",
+        "keyPhrases": [
+          "你推荐什么",
+          "有什么好吃的"
+        ]
+      },
+      {
+        "id": "order_dish",
+        "description": "Order at least one dish",
+        "keyPhrases": [
+          "我要一个",
+          "来一份"
+        ]
+      },
+      {
+        "id": "order_drink",
+        "description": "Order a drink",
+        "keyPhrases": [
+          "一杯",
+          "一瓶"
+        ]
+      },
+      {
+        "id": "ask_bill",
+        "description": "Ask for the bill at the end of the meal",
+        "keyPhrases": [
+          "买单",
+          "多少钱"
+        ]
+      },
+      {
+        "id": "goodbye",
+        "description": "Thank the waiter and say goodbye",
+        "keyPhrases": [
+          "谢谢",
+          "再见"
+        ]
+      }
+    ],
+    "kind": "roleplay"
   },
   {
     "name": "Asking for Directions",
     "description": "You are lost in a city in China and need to ask a stranger for directions to a specific place.",
+    "tutorRole": "a helpful local passerby on the street",
     "plan": [
-      { "id": "greet", "description": "Politely greet the stranger and get their attention" },
-      { "id": "state_destination", "description": "Explain where you are trying to go" },
-      { "id": "understand_directions", "description": "Listen to and acknowledge the directions given" },
-      { "id": "clarify", "description": "Ask a clarifying question or ask them to repeat something" },
-      { "id": "thanks", "description": "Thank the stranger for their help" }
-    ]
+      {
+        "id": "greet",
+        "description": "Politely greet the stranger and get their attention",
+        "keyPhrases": [
+          "请问",
+          "不好意思"
+        ]
+      },
+      {
+        "id": "state_destination",
+        "description": "Explain where you are trying to go",
+        "keyPhrases": [
+          "怎么走",
+          "在哪儿"
+        ]
+      },
+      {
+        "id": "understand_directions",
+        "description": "Listen to and acknowledge the directions given",
+        "keyPhrases": [
+          "往前走",
+          "左拐",
+          "右拐"
+        ]
+      },
+      {
+        "id": "clarify",
+        "description": "Ask a clarifying question or ask them to repeat something",
+        "keyPhrases": [
+          "请再说一遍",
+          "远不远"
+        ]
+      },
+      {
+        "id": "thanks",
+        "description": "Thank the stranger for their help",
+        "keyPhrases": [
+          "谢谢你",
+          "麻烦你了"
+        ]
+      }
+    ],
+    "kind": "roleplay"
   },
   {
     "name": "Job Interview",
     "description": "You are being interviewed for a job at a company in China. Answer questions naturally and ask some of your own.",
+    "tutorRole": "the hiring manager conducting the interview",
     "plan": [
-      { "id": "introduce", "description": "Introduce yourself" },
-      { "id": "experience", "description": "Describe your relevant work experience or skills" },
-      { "id": "why_job", "description": "Explain why you want this job" },
-      { "id": "ask_questions", "description": "Ask the interviewer at least one question about the role" },
-      { "id": "closing", "description": "Close the interview politely" }
-    ]
+      {
+        "id": "introduce",
+        "description": "Introduce yourself",
+        "keyPhrases": [
+          "我叫",
+          "我是"
+        ]
+      },
+      {
+        "id": "experience",
+        "description": "Describe your relevant work experience or skills",
+        "keyPhrases": [
+          "我做过",
+          "我会"
+        ]
+      },
+      {
+        "id": "why_job",
+        "description": "Explain why you want this job",
+        "keyPhrases": [
+          "因为",
+          "我对...感兴趣"
+        ]
+      },
+      {
+        "id": "ask_questions",
+        "description": "Ask the interviewer at least one question about the role",
+        "keyPhrases": [
+          "请问",
+          "工作时间"
+        ]
+      },
+      {
+        "id": "closing",
+        "description": "Close the interview politely",
+        "keyPhrases": [
+          "谢谢您的时间",
+          "期待"
+        ]
+      }
+    ],
+    "kind": "roleplay"
   },
   {
     "name": "Doctor's Appointment",
     "description": "You are visiting a doctor in China because you don't feel well. Describe your symptoms and understand their advice.",
+    "tutorRole": "the doctor at a neighborhood clinic",
     "plan": [
-      { "id": "check_in", "description": "Check in and explain you have an appointment or need to see a doctor" },
-      { "id": "symptoms", "description": "Describe your symptoms" },
-      { "id": "answer_followup", "description": "Answer the doctor's follow-up questions" },
-      { "id": "understand_advice", "description": "Understand and acknowledge the doctor's diagnosis or advice" },
-      { "id": "medication", "description": "Ask about medication or next steps" },
-      { "id": "thanks", "description": "Thank the doctor and end the visit" }
-    ]
+      {
+        "id": "check_in",
+        "description": "Check in and explain you need to see a doctor",
+        "keyPhrases": [
+          "我不舒服",
+          "我想看医生"
+        ]
+      },
+      {
+        "id": "symptoms",
+        "description": "Describe your symptoms",
+        "keyPhrases": [
+          "头疼",
+          "发烧",
+          "咳嗽"
+        ]
+      },
+      {
+        "id": "answer_followup",
+        "description": "Answer the doctor's follow-up questions",
+        "keyPhrases": [
+          "从昨天开始",
+          "两天了"
+        ]
+      },
+      {
+        "id": "understand_advice",
+        "description": "Understand and acknowledge the doctor's diagnosis or advice",
+        "keyPhrases": [
+          "明白了",
+          "好的"
+        ]
+      },
+      {
+        "id": "medication",
+        "description": "Ask about medication or next steps",
+        "keyPhrases": [
+          "要吃药吗",
+          "一天几次"
+        ]
+      },
+      {
+        "id": "thanks",
+        "description": "Thank the doctor and end the visit",
+        "keyPhrases": [
+          "谢谢医生"
+        ]
+      }
+    ],
+    "kind": "roleplay"
   },
   {
     "name": "Shopping for Clothes",
     "description": "You are shopping for clothes at a store in China and interacting with a shop assistant.",
+    "tutorRole": "the shop assistant at a clothing store",
     "plan": [
-      { "id": "greet", "description": "Greet the shop assistant" },
-      { "id": "describe_item", "description": "Describe what kind of clothing you are looking for" },
-      { "id": "ask_options", "description": "Ask about size or color options" },
-      { "id": "ask_price", "description": "Ask about the price" },
-      { "id": "decide", "description": "Decide whether to buy the item and complete or decline the purchase" }
+      {
+        "id": "greet",
+        "description": "Greet the shop assistant",
+        "keyPhrases": [
+          "你好",
+          "我随便看看"
+        ]
+      },
+      {
+        "id": "describe_item",
+        "description": "Describe what kind of clothing you are looking for",
+        "keyPhrases": [
+          "我想买",
+          "一件",
+          "一条"
+        ]
+      },
+      {
+        "id": "ask_options",
+        "description": "Ask about size or color options",
+        "keyPhrases": [
+          "有大一点的吗",
+          "有别的颜色吗"
+        ]
+      },
+      {
+        "id": "ask_price",
+        "description": "Ask about the price",
+        "keyPhrases": [
+          "多少钱",
+          "能便宜一点吗"
+        ]
+      },
+      {
+        "id": "decide",
+        "description": "Decide whether to buy the item and complete or decline the purchase",
+        "keyPhrases": [
+          "我要这个",
+          "我再想想"
+        ]
+      }
+    ],
+    "kind": "roleplay"
+  },
+  {
+    "kind": "conversation",
+    "name": "Your Weekend",
+    "description": "Chat about what you did last weekend and what you're planning next, practicing past and future time expressions.",
+    "tutorRole": "a friendly Mandarin tutor",
+    "plan": [
+      {
+        "id": "past_activities",
+        "description": "Describe two things you did last weekend",
+        "keyPhrases": [
+          "上个周末",
+          "我去了",
+          "跟朋友一起"
+        ]
+      },
+      {
+        "id": "feelings",
+        "description": "Say how you felt about them",
+        "keyPhrases": [
+          "很开心",
+          "有点累",
+          "觉得"
+        ]
+      },
+      {
+        "id": "ask_tutor",
+        "description": "Ask the tutor about their weekend",
+        "keyPhrases": [
+          "你呢",
+          "你周末做了什么"
+        ]
+      },
+      {
+        "id": "next_plans",
+        "description": "Talk about plans for next weekend",
+        "keyPhrases": [
+          "下个周末",
+          "打算",
+          "可能"
+        ]
+      },
+      {
+        "id": "invite",
+        "description": "Invite the tutor to do something together",
+        "keyPhrases": [
+          "一起",
+          "怎么样",
+          "要不要"
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "conversation",
+    "name": "Food and Cooking",
+    "description": "Talk about your favorite dishes, what you can cook, and food from your hometown.",
+    "tutorRole": "a friendly Mandarin tutor",
+    "plan": [
+      {
+        "id": "favorite_dish",
+        "description": "Describe your favorite dish and why you like it",
+        "keyPhrases": [
+          "最喜欢",
+          "因为",
+          "味道"
+        ]
+      },
+      {
+        "id": "can_cook",
+        "description": "Say what you can and can't cook",
+        "keyPhrases": [
+          "我会做",
+          "不会做",
+          "做菜"
+        ]
+      },
+      {
+        "id": "taste_words",
+        "description": "Use at least three taste words (spicy, sweet, salty, sour)",
+        "keyPhrases": [
+          "辣",
+          "甜",
+          "咸",
+          "酸"
+        ]
+      },
+      {
+        "id": "hometown_food",
+        "description": "Introduce a food from your hometown",
+        "keyPhrases": [
+          "我家乡",
+          "有名",
+          "特色"
+        ]
+      },
+      {
+        "id": "ask_recommend",
+        "description": "Ask the tutor to recommend a Chinese dish to try",
+        "keyPhrases": [
+          "推荐",
+          "应该试试"
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "conversation",
+    "name": "Daily Routine and Work",
+    "description": "Describe a typical day, your job or studies, and how you feel about your schedule.",
+    "tutorRole": "a friendly Mandarin tutor",
+    "plan": [
+      {
+        "id": "morning",
+        "description": "Describe your morning routine with clock times",
+        "keyPhrases": [
+          "每天早上",
+          "起床",
+          "点"
+        ]
+      },
+      {
+        "id": "work",
+        "description": "Explain what you do for work or study",
+        "keyPhrases": [
+          "我是",
+          "工作",
+          "学习"
+        ]
+      },
+      {
+        "id": "frequency",
+        "description": "Use frequency words (often, sometimes, never)",
+        "keyPhrases": [
+          "经常",
+          "有时候",
+          "从来不"
+        ]
+      },
+      {
+        "id": "likes_dislikes",
+        "description": "Say what you like and dislike about your schedule",
+        "keyPhrases": [
+          "喜欢",
+          "不太喜欢",
+          "太忙了"
+        ]
+      },
+      {
+        "id": "compare",
+        "description": "Compare weekdays and weekends",
+        "keyPhrases": [
+          "比",
+          "一样",
+          "没有那么"
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "conversation",
+    "name": "Hometown and Travel",
+    "description": "Introduce where you're from, places you've traveled, and where you'd like to go in China.",
+    "tutorRole": "a friendly Mandarin tutor",
+    "plan": [
+      {
+        "id": "hometown",
+        "description": "Introduce your hometown: size, weather, what it's known for",
+        "keyPhrases": [
+          "我来自",
+          "天气",
+          "有名的"
+        ]
+      },
+      {
+        "id": "past_trip",
+        "description": "Narrate a past trip in a few sentences",
+        "keyPhrases": [
+          "去年",
+          "去过",
+          "玩了"
+        ]
+      },
+      {
+        "id": "transport",
+        "description": "Talk about how you traveled there",
+        "keyPhrases": [
+          "坐飞机",
+          "坐火车",
+          "开车"
+        ]
+      },
+      {
+        "id": "china_wish",
+        "description": "Say where in China you want to go and why",
+        "keyPhrases": [
+          "想去",
+          "听说",
+          "风景"
+        ]
+      },
+      {
+        "id": "ask_advice",
+        "description": "Ask the tutor for travel advice",
+        "keyPhrases": [
+          "什么时候去最好",
+          "有什么建议"
+        ]
+      }
     ]
   }
 ]

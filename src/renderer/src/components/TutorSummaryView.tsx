@@ -1,15 +1,52 @@
-import type { TutorSummary } from '@shared/types'
+import { useEffect, useState } from 'react'
+import type { TutorSession } from '@shared/types'
 
 interface Props {
-  summary: TutorSummary
-  scenarioName: string
+  sessionId: number
   onExit: () => void
 }
 
-export default function TutorSummaryView({ summary, scenarioName, onExit }: Props): React.JSX.Element {
+export default function TutorSummaryView({ sessionId, onExit }: Props): React.JSX.Element {
+  const [session, setSession] = useState<TutorSession | null>(null)
+
+  useEffect(() => {
+    window.api.tutor.getSession(sessionId).then(setSession)
+  }, [sessionId])
+
+  if (!session) return <p>Loading…</p>
+  const summary = session.summary
+  if (!summary) {
+    return (
+      <div className="tutor-summary">
+        <p>This session hasn’t been summarized yet.</p>
+        <button className="btn" onClick={onExit}>
+          Back
+        </button>
+      </div>
+    )
+  }
+
+  const missed = session.plan.filter((c) => summary.missedCheckpointIds.includes(c.id))
+
   return (
     <div className="tutor-summary">
-      <h2>Session Complete: {scenarioName}</h2>
+      <h2>Session Complete: {session.scenarioName}</h2>
+
+      <div className="settings-card">
+        <h3>Plan coverage · {summary.progressPercent}%</h3>
+        {missed.length === 0 ? (
+          <p className="deck-description">You covered every step of the plan.</p>
+        ) : (
+          <>
+            <p className="deck-description">Steps you didn’t get to (try them next time):</p>
+            <ul>
+              {missed.map((c) => (
+                <li key={c.id}>{c.description}</li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
 
       <div className="settings-card">
         <h3>Key Mistakes</h3>
@@ -26,24 +63,40 @@ export default function TutorSummaryView({ summary, scenarioName, onExit }: Prop
 
       <div className="settings-card">
         <h3>Learnings</h3>
-        <ul>
-          {summary.learnings.map((l, i) => (
-            <li key={i}>{l}</li>
-          ))}
-        </ul>
+        {summary.learnings.length === 0 ? (
+          <p className="deck-description">Nothing to report; the session was very short.</p>
+        ) : (
+          <ul>
+            {summary.learnings.map((l, i) => (
+              <li key={i}>{l}</li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="settings-card">
         <h3>Vocabulary</h3>
-        <p className="deck-description">
-          {summary.vocabAddedCount > 0
-            ? `${summary.vocabAddedCount} new word${summary.vocabAddedCount === 1 ? '' : 's'} added to your "Tutor Vocabulary" deck.`
-            : 'No new vocabulary was added this session.'}
-        </p>
+        {summary.vocabAdded.length === 0 ? (
+          <p className="deck-description">No new vocabulary was added this session.</p>
+        ) : (
+          <>
+            <p className="deck-description">
+              {summary.vocabAdded.length} new card{summary.vocabAdded.length === 1 ? '' : 's'} added to “Tutor
+              Vocabulary”:
+            </p>
+            <ul className="tutor-vocab-list">
+              {summary.vocabAdded.map((v, i) => (
+                <li key={i}>
+                  <span className="hanzi-inline">{v.hanzi}</span> {v.pinyin} · {v.english}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </div>
 
       <button className="btn btn-primary" onClick={onExit}>
-        Back to decks
+        Back to tutor
       </button>
     </div>
   )
