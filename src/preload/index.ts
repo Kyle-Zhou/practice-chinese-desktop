@@ -1,12 +1,20 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type {
+  AppSettings,
   Card,
   Deck,
   Grade,
   NewCardInput,
   NewDeckInput,
   Scenario,
+  SecretName,
+  StartSessionInput,
+  SynthesizeResult,
+  TranscribeResult,
+  TutorEvent,
+  TutorMessage,
   TutorSession,
+  TutorSessionSummaryRow,
   TutorSummary,
   TutorTurnResult
 } from '../shared/types'
@@ -34,23 +42,34 @@ const api = {
       ipcRenderer.invoke('study:submitReview', cardId, grade)
   },
   settings: {
-    hasApiKey: (): Promise<boolean> => ipcRenderer.invoke('settings:hasApiKey'),
-    setApiKey: (key: string): Promise<void> => ipcRenderer.invoke('settings:setApiKey', key),
-    clearApiKey: (): Promise<void> => ipcRenderer.invoke('settings:clearApiKey')
+    get: (): Promise<AppSettings> => ipcRenderer.invoke('settings:get'),
+    update: (patch: Partial<AppSettings>): Promise<AppSettings> => ipcRenderer.invoke('settings:update', patch),
+    secretStatus: (): Promise<Record<SecretName, boolean>> => ipcRenderer.invoke('settings:secretStatus'),
+    setSecret: (name: SecretName, value: string): Promise<void> => ipcRenderer.invoke('settings:setSecret', name, value),
+    clearSecret: (name: SecretName): Promise<void> => ipcRenderer.invoke('settings:clearSecret', name)
+  },
+  voice: {
+    requestMicAccess: (): Promise<boolean> => ipcRenderer.invoke('voice:requestMicAccess'),
+    transcribe: (wav: ArrayBuffer): Promise<TranscribeResult> => ipcRenderer.invoke('voice:transcribe', wav),
+    synthesize: (text: string): Promise<SynthesizeResult> => ipcRenderer.invoke('voice:synthesize', text)
   },
   tutor: {
     listScenarios: (): Promise<Scenario[]> => ipcRenderer.invoke('tutor:listScenarios'),
-    startSession: (scenarioId: number): Promise<TutorSession> => ipcRenderer.invoke('tutor:startSession', scenarioId),
+    createTheme: (prompt: string): Promise<Scenario> => ipcRenderer.invoke('tutor:createTheme', prompt),
+    deleteScenario: (id: number): Promise<void> => ipcRenderer.invoke('tutor:deleteScenario', id),
+    listSessions: (): Promise<TutorSessionSummaryRow[]> => ipcRenderer.invoke('tutor:listSessions'),
+    startSession: (input: StartSessionInput): Promise<TutorSession> => ipcRenderer.invoke('tutor:startSession', input),
     getSession: (sessionId: number): Promise<TutorSession> => ipcRenderer.invoke('tutor:getSession', sessionId),
-    sendMessage: (sessionId: number, message: string): Promise<TutorTurnResult> =>
-      ipcRenderer.invoke('tutor:sendMessage', sessionId, message),
-    endSession: (sessionId: number, vocabAddedCount: number): Promise<TutorSummary> =>
-      ipcRenderer.invoke('tutor:endSession', sessionId, vocabAddedCount),
-    onStreamChunk: (callback: (sessionId: number, chunk: string) => void): (() => void) => {
-      const listener = (_e: unknown, payload: { sessionId: number; chunk: string }): void =>
-        callback(payload.sessionId, payload.chunk)
-      ipcRenderer.on('tutor:streamChunk', listener)
-      return () => ipcRenderer.removeListener('tutor:streamChunk', listener)
+    openSession: (sessionId: number): Promise<TutorSession> => ipcRenderer.invoke('tutor:openSession', sessionId),
+    deleteSession: (sessionId: number): Promise<void> => ipcRenderer.invoke('tutor:deleteSession', sessionId),
+    sendMessage: (sessionId: number, message: string, source: TutorMessage['source']): Promise<TutorTurnResult> =>
+      ipcRenderer.invoke('tutor:sendMessage', sessionId, message, source),
+    endSession: (sessionId: number): Promise<TutorSummary> => ipcRenderer.invoke('tutor:endSession', sessionId),
+    onEvent: (callback: (sessionId: number, event: TutorEvent) => void): (() => void) => {
+      const listener = (_e: unknown, payload: { sessionId: number; event: TutorEvent }): void =>
+        callback(payload.sessionId, payload.event)
+      ipcRenderer.on('tutor:event', listener)
+      return () => ipcRenderer.removeListener('tutor:event', listener)
     }
   }
 }

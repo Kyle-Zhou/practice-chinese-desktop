@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, screen, shell } from 'electron'
 import { join } from 'path'
 import { initDatabase } from './db'
 import { registerIpcHandlers } from './ipc'
@@ -6,10 +6,23 @@ import { seedIfNeeded } from './seed'
 
 const isDev = !app.isPackaged
 
+/**
+ * A fixed 1000x720 default looks cramped on any modern display and tiny on a 27" one. Size to
+ * the screen instead: most of the work area (which already excludes the menu bar and Dock),
+ * capped so it doesn't become an unreadably wide single column on an ultrawide.
+ */
+function defaultWindowSize(): { width: number; height: number } {
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize
+  return {
+    width: Math.min(1600, Math.round(width * 0.9)),
+    height: Math.min(1040, Math.round(height * 0.9))
+  }
+}
+
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
-    width: 1000,
-    height: 720,
+    ...defaultWindowSize(),
+    center: true,
     minWidth: 720,
     minHeight: 560,
     show: false,
@@ -37,7 +50,8 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
-  initDatabase()
+  // CHINESE_ANKI_DB_PATH lets dev/smoke runs point at a scratch database instead of the real one.
+  initDatabase(process.env['CHINESE_ANKI_DB_PATH'])
   seedIfNeeded()
   registerIpcHandlers()
 

@@ -1,18 +1,24 @@
 import Database from 'better-sqlite3'
-import { app, safeStorage } from 'electron'
+import { app } from 'electron'
 import { join } from 'path'
 import { NEW_CARD_STATE, schedule } from '../shared/sm2'
+import { mergeCompleted, planProgress } from '../shared/plan'
 import type {
   Card,
   Correction,
+  CorrectionMode,
   Deck,
   Grade,
   NewCardInput,
   NewDeckInput,
   PlanCheckpoint,
   Scenario,
+  ScenarioKind,
   TutorMessage,
-  TutorSession
+  TutorSession,
+  TutorSessionSummaryRow,
+  TutorSummary,
+  VocabCandidate
 } from '../shared/types'
 
 let db: Database.Database
@@ -52,6 +58,7 @@ function migrate(): void {
 
     CREATE INDEX IF NOT EXISTS idx_cards_deck_id ON cards(deck_id);
     CREATE INDEX IF NOT EXISTS idx_cards_due_at ON cards(due_at);
+    CREATE INDEX IF NOT EXISTS idx_cards_hanzi ON cards(hanzi);
 
     CREATE TABLE IF NOT EXISTS review_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -87,6 +94,22 @@ function migrate(): void {
       created_at TEXT NOT NULL
     );
   `)
+
+  // Additive column migrations. SQLite has no ADD COLUMN IF NOT EXISTS, so check first.
+  addColumnIfMissing('scenarios', 'tutor_role', `TEXT NOT NULL DEFAULT ''`)
+  addColumnIfMissing('scenarios', 'kind', `TEXT NOT NULL DEFAULT 'roleplay'`)
+  addColumnIfMissing('scenarios', 'custom', `INTEGER NOT NULL DEFAULT 0`)
+  addColumnIfMissing('tutor_sessions', 'vocab_added', `TEXT NOT NULL DEFAULT '[]'`)
+  addColumnIfMissing('tutor_sessions', 'correction_mode', `TEXT NOT NULL DEFAULT 'inline'`)
+  addColumnIfMissing('tutor_sessions', 'summary', `TEXT`)
+  addColumnIfMissing('tutor_sessions', 'updated_at', `TEXT NOT NULL DEFAULT ''`)
+  db.exec(`UPDATE tutor_sessions SET updated_at = created_at WHERE updated_at = ''`)
+}
+
+function addColumnIfMissing(table: string, column: string, definition: string): void {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]
+  if (columns.some((c) => c.name === column)) return
+  db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`)
 }
 
 interface DeckRow {
@@ -143,18 +166,16 @@ function cardFromRow(row: CardRow): Card {
   }
 }
 
+const DECK_SELECT = `
+  SELECT
+    d.id, d.name, d.description, d.created_at,
+    (SELECT COUNT(*) FROM cards c WHERE c.deck_id = d.id) AS card_count,
+    (SELECT COUNT(*) FROM cards c WHERE c.deck_id = d.id AND c.due_at <= @now) AS due_count
+  FROM decks d`
+
 export function listDecks(): Deck[] {
   const now = new Date().toISOString()
-  const rows = db
-    .prepare(
-      `SELECT
-        d.id, d.name, d.description, d.created_at,
-        (SELECT COUNT(*) FROM cards c WHERE c.deck_id = d.id) AS card_count,
-        (SELECT COUNT(*) FROM cards c WHERE c.deck_id = d.id AND c.due_at <= @now) AS due_count
-      FROM decks d
-      ORDER BY d.id ASC`
-    )
-    .all({ now }) as DeckRow[]
+  const rows = db.prepare(`${DECK_SELECT} ORDER BY d.id ASC`).all({ now }) as DeckRow[]
   return rows.map(deckFromRow)
 }
 
@@ -174,16 +195,19 @@ export function createDeck(input: NewDeckInput): Deck {
 
 export function getDeckById(id: number): Deck {
   const now = new Date().toISOString()
-  const row = db
-    .prepare(
-      `SELECT
-        d.id, d.name, d.description, d.created_at,
-        (SELECT COUNT(*) FROM cards c WHERE c.deck_id = d.id) AS card_count,
-        (SELECT COUNT(*) FROM cards c WHERE c.deck_id = d.id AND c.due_at <= @now) AS due_count
-      FROM decks d WHERE d.id = @id`
-    )
-    .get({ id, now }) as DeckRow
+  const row = db.prepare(`${DECK_SELECT} WHERE d.id = @id`).get({ id, now }) as DeckRow
   return deckFromRow(row)
+}
+
+export function findDeckByName(name: string): Deck | null {
+  const now = new Date().toISOString()
+  const row = db.prepare(`${DECK_SELECT} WHERE d.name = @name`).get({ name, now }) as DeckRow | undefined
+  return row ? deckFromRow(row) : null
+}
+
+/** Returns the deck with this name, creating it if needed. */
+export function ensureDeck(name: string, description: string): Deck {
+  return findDeckByName(name) ?? createDeck({ name, description })
 }
 
 export function deleteDeck(id: number): void {
@@ -223,6 +247,11 @@ export function getCardById(id: number): Card {
   return cardFromRow(row)
 }
 
+/** True if any deck already has a card for this hanzi (used to avoid duplicate tutor vocab). */
+export function cardExistsWithHanzi(hanzi: string): boolean {
+  return db.prepare(`SELECT 1 FROM cards WHERE hanzi = ? LIMIT 1`).get(hanzi) !== undefined
+}
+
 export function updateCard(
   id: number,
   fields: Partial<Pick<Card, 'hanzi' | 'pinyin' | 'english' | 'audioPath' | 'notes'>>
@@ -251,9 +280,7 @@ export function getDueCards(deckId: number | null, limit = 200): Card[] {
   const now = new Date().toISOString()
   const rows = (
     deckId === null
-      ? db
-          .prepare(`SELECT * FROM cards WHERE due_at <= ? ORDER BY due_at ASC LIMIT ?`)
-          .all(now, limit)
+      ? db.prepare(`SELECT * FROM cards WHERE due_at <= ? ORDER BY due_at ASC LIMIT ?`).all(now, limit)
       : db
           .prepare(`SELECT * FROM cards WHERE deck_id = ? AND due_at <= ? ORDER BY due_at ASC LIMIT ?`)
           .all(deckId, now, limit)
@@ -296,6 +323,8 @@ export function submitReview(cardId: number, grade: Grade): Card {
   return getCardById(cardId)
 }
 
+// --- Meta (key/value store used by settings and seeding) ---
+
 export function getMeta(key: string): string | null {
   const row = db.prepare(`SELECT value FROM meta WHERE key = ?`).get(key) as { value: string } | undefined
   return row?.value ?? null
@@ -308,9 +337,12 @@ export function setMeta(key: string, value: string): void {
   )
 }
 
+export function deleteMeta(key: string): void {
+  db.prepare(`DELETE FROM meta WHERE key = ?`).run(key)
+}
+
 export function deckExistsByName(name: string): boolean {
-  const row = db.prepare(`SELECT 1 FROM decks WHERE name = ?`).get(name)
-  return row !== undefined
+  return findDeckByName(name) !== null
 }
 
 export function seedDeck(name: string, description: string, cards: NewCardInput[]): void {
@@ -324,33 +356,37 @@ export function seedDeck(name: string, description: string, cards: NewCardInput[
   tx()
 }
 
-// --- AI Tutor ---
+// --- AI Tutor: scenarios ---
 
 interface ScenarioRow {
   id: number
+  kind: ScenarioKind
   name: string
   description: string
+  tutor_role: string
   plan: string
-  created_at: string
-}
-
-interface TutorSessionRow {
-  id: number
-  scenario_id: number
-  completed_checkpoint_ids: string
-  transcript: string
-  corrections: string
-  status: 'active' | 'completed'
+  custom: number
   created_at: string
 }
 
 function scenarioFromRow(row: ScenarioRow): Scenario {
   return {
     id: row.id,
+    kind: row.kind,
     name: row.name,
     description: row.description,
-    plan: JSON.parse(row.plan) as PlanCheckpoint[]
+    tutorRole: row.tutor_role,
+    plan: JSON.parse(row.plan) as PlanCheckpoint[],
+    custom: row.custom === 1
   }
+}
+
+export interface ScenarioInput {
+  kind: ScenarioKind
+  name: string
+  description: string
+  tutorRole: string
+  plan: PlanCheckpoint[]
 }
 
 export function listScenarios(): Scenario[] {
@@ -363,106 +399,175 @@ export function getScenarioById(id: number): Scenario {
   return scenarioFromRow(row)
 }
 
-export function scenarioExistsByName(name: string): boolean {
-  const row = db.prepare(`SELECT 1 FROM scenarios WHERE name = ?`).get(name)
-  return row !== undefined
+/** Inserts or refreshes a seeded scenario so plan edits in seed/scenarios.json reach existing installs. */
+export function upsertScenario(input: ScenarioInput): void {
+  db.prepare(
+    `INSERT INTO scenarios (kind, name, description, tutor_role, plan, custom, created_at)
+     VALUES (@kind, @name, @description, @tutorRole, @plan, 0, @createdAt)
+     ON CONFLICT(name) DO UPDATE SET kind = excluded.kind, description = excluded.description, tutor_role = excluded.tutor_role, plan = excluded.plan`
+  ).run({ ...input, plan: JSON.stringify(input.plan), createdAt: new Date().toISOString() })
 }
 
-export function seedScenario(name: string, description: string, plan: PlanCheckpoint[]): void {
-  if (scenarioExistsByName(name)) return
-  db.prepare(`INSERT INTO scenarios (name, description, plan, created_at) VALUES (?, ?, ?, ?)`).run(
-    name,
-    description,
-    JSON.stringify(plan),
-    new Date().toISOString()
-  )
+/** Creates a learner-authored scenario. Names are made unique so a repeated theme never collides with a seed. */
+export function createCustomScenario(input: ScenarioInput): Scenario {
+  let name = input.name
+  for (let n = 2; db.prepare(`SELECT 1 FROM scenarios WHERE name = ?`).get(name); n++) name = `${input.name} (${n})`
+  const result = db
+    .prepare(
+      `INSERT INTO scenarios (kind, name, description, tutor_role, plan, custom, created_at)
+       VALUES (@kind, @name, @description, @tutorRole, @plan, 1, @createdAt)`
+    )
+    .run({ ...input, name, plan: JSON.stringify(input.plan), createdAt: new Date().toISOString() })
+  return getScenarioById(result.lastInsertRowid as number)
+}
+
+export function deleteScenario(id: number): void {
+  db.prepare(`DELETE FROM scenarios WHERE id = ? AND custom = 1`).run(id)
+}
+
+// --- AI Tutor: sessions ---
+
+interface TutorSessionRow {
+  id: number
+  scenario_id: number
+  completed_checkpoint_ids: string
+  transcript: string
+  corrections: string
+  vocab_added: string
+  correction_mode: CorrectionMode
+  status: 'active' | 'completed'
+  summary: string | null
+  created_at: string
+  updated_at: string
 }
 
 function tutorSessionFromRow(row: TutorSessionRow, scenario: Scenario): TutorSession {
   return {
     id: row.id,
     scenarioId: row.scenario_id,
+    scenarioKind: scenario.kind,
     scenarioName: scenario.name,
     scenarioDescription: scenario.description,
+    tutorRole: scenario.tutorRole,
     plan: scenario.plan,
     completedCheckpointIds: JSON.parse(row.completed_checkpoint_ids) as string[],
     transcript: JSON.parse(row.transcript) as TutorMessage[],
     corrections: JSON.parse(row.corrections) as Correction[],
+    vocabAdded: JSON.parse(row.vocab_added) as VocabCandidate[],
+    correctionMode: row.correction_mode,
     status: row.status,
-    createdAt: row.created_at
+    summary: row.summary ? (JSON.parse(row.summary) as TutorSummary) : null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
   }
 }
 
-export function createTutorSession(scenarioId: number): TutorSession {
-  const createdAt = new Date().toISOString()
+export function createTutorSession(scenarioId: number, correctionMode: CorrectionMode): TutorSession {
+  const now = new Date().toISOString()
   const result = db
     .prepare(
-      `INSERT INTO tutor_sessions (scenario_id, completed_checkpoint_ids, transcript, corrections, status, created_at)
-       VALUES (?, '[]', '[]', '[]', 'active', ?)`
+      `INSERT INTO tutor_sessions (scenario_id, correction_mode, status, created_at, updated_at)
+       VALUES (?, ?, 'active', ?, ?)`
     )
-    .run(scenarioId, createdAt)
+    .run(scenarioId, correctionMode, now, now)
   return getTutorSession(result.lastInsertRowid as number)
 }
 
 export function getTutorSession(id: number): TutorSession {
-  const row = db.prepare(`SELECT * FROM tutor_sessions WHERE id = ?`).get(id) as TutorSessionRow
+  const row = db.prepare(`SELECT * FROM tutor_sessions WHERE id = ?`).get(id) as TutorSessionRow | undefined
+  if (!row) throw new Error(`Tutor session ${id} not found`)
   const scenario = getScenarioById(row.scenario_id)
   return tutorSessionFromRow(row, scenario)
 }
 
-export function appendTutorTurn(
-  sessionId: number,
-  userMessage: string,
-  assistantMessage: string,
-  newCorrections: Correction[],
-  newCompletedCheckpointIds: string[]
-): TutorSession {
+export function listTutorSessions(): TutorSessionSummaryRow[] {
+  const rows = db
+    .prepare(
+      `SELECT s.id, s.scenario_id, s.status, s.completed_checkpoint_ids, s.transcript, s.updated_at, sc.name AS scenario_name, sc.plan
+       FROM tutor_sessions s JOIN scenarios sc ON sc.id = s.scenario_id
+       ORDER BY s.updated_at DESC LIMIT 50`
+    )
+    .all() as {
+    id: number
+    scenario_id: number
+    status: 'active' | 'completed'
+    completed_checkpoint_ids: string
+    transcript: string
+    updated_at: string
+    scenario_name: string
+    plan: string
+  }[]
+  return rows.map((r) => {
+    const plan = JSON.parse(r.plan) as PlanCheckpoint[]
+    const transcript = JSON.parse(r.transcript) as TutorMessage[]
+    return {
+      id: r.id,
+      scenarioId: r.scenario_id,
+      scenarioName: r.scenario_name,
+      status: r.status,
+      progressPercent: planProgress(plan, JSON.parse(r.completed_checkpoint_ids) as string[]),
+      turnCount: transcript.filter((m) => m.role === 'user').length,
+      updatedAt: r.updated_at
+    }
+  })
+}
+
+export function deleteTutorSession(id: number): void {
+  db.prepare(`DELETE FROM tutor_sessions WHERE id = ?`).run(id)
+}
+
+export interface TurnRecord {
+  userMessage: TutorMessage
+  assistantMessage: TutorMessage
+  corrections: Correction[]
+  completedCheckpointIds: string[]
+  vocabAdded: VocabCandidate[]
+}
+
+/** Persists one completed exchange atomically and returns the refreshed session. */
+export function appendTutorTurn(sessionId: number, turn: TurnRecord): TutorSession {
+  const tx = db.transaction(() => {
+    const session = getTutorSession(sessionId)
+    const turnIndex = session.transcript.length
+    const transcript: TutorMessage[] = [...session.transcript, turn.userMessage, turn.assistantMessage]
+    const corrections = [...session.corrections, ...turn.corrections.map((c) => ({ ...c, turnIndex }))]
+    const completedCheckpointIds = mergeCompleted(session.plan, session.completedCheckpointIds, turn.completedCheckpointIds)
+    const vocabAdded = [...session.vocabAdded, ...turn.vocabAdded]
+
+    db.prepare(
+      `UPDATE tutor_sessions
+       SET transcript = ?, corrections = ?, completed_checkpoint_ids = ?, vocab_added = ?, updated_at = ?
+       WHERE id = ?`
+    ).run(
+      JSON.stringify(transcript),
+      JSON.stringify(corrections),
+      JSON.stringify(completedCheckpointIds),
+      JSON.stringify(vocabAdded),
+      new Date().toISOString(),
+      sessionId
+    )
+  })
+  tx()
+  return getTutorSession(sessionId)
+}
+
+/** Stores a tutor-initiated opening line (the tutor speaks first, like answering a call). */
+export function appendAssistantMessage(sessionId: number, text: string): TutorSession {
   const session = getTutorSession(sessionId)
-  const transcript: TutorMessage[] = [
-    ...session.transcript,
-    { role: 'user', text: userMessage },
-    { role: 'assistant', text: assistantMessage }
-  ]
-  const corrections = [...session.corrections, ...newCorrections]
-  const completedCheckpointIds = Array.from(
-    new Set([...session.completedCheckpointIds, ...newCompletedCheckpointIds])
+  const transcript: TutorMessage[] = [...session.transcript, { role: 'assistant', text }]
+  db.prepare(`UPDATE tutor_sessions SET transcript = ?, updated_at = ? WHERE id = ?`).run(
+    JSON.stringify(transcript),
+    new Date().toISOString(),
+    sessionId
   )
-
-  db.prepare(
-    `UPDATE tutor_sessions SET transcript = ?, corrections = ?, completed_checkpoint_ids = ? WHERE id = ?`
-  ).run(JSON.stringify(transcript), JSON.stringify(corrections), JSON.stringify(completedCheckpointIds), sessionId)
-
   return getTutorSession(sessionId)
 }
 
-export function completeTutorSession(sessionId: number): TutorSession {
-  db.prepare(`UPDATE tutor_sessions SET status = 'completed' WHERE id = ?`).run(sessionId)
+export function completeTutorSession(sessionId: number, summary: TutorSummary): TutorSession {
+  db.prepare(`UPDATE tutor_sessions SET status = 'completed', summary = ?, updated_at = ? WHERE id = ?`).run(
+    JSON.stringify(summary),
+    new Date().toISOString(),
+    sessionId
+  )
   return getTutorSession(sessionId)
-}
-
-// --- Settings (encrypted API key) ---
-
-const API_KEY_META_KEY = 'anthropic_api_key_encrypted'
-
-export function hasApiKey(): boolean {
-  return getMeta(API_KEY_META_KEY) !== null
-}
-
-export function getApiKey(): string | null {
-  const stored = getMeta(API_KEY_META_KEY)
-  if (!stored) return null
-  if (!safeStorage.isEncryptionAvailable()) return null
-  return safeStorage.decryptString(Buffer.from(stored, 'base64'))
-}
-
-export function setApiKey(key: string): void {
-  if (!safeStorage.isEncryptionAvailable()) {
-    throw new Error('OS-level credential encryption is not available on this machine')
-  }
-  const encrypted = safeStorage.encryptString(key)
-  setMeta(API_KEY_META_KEY, encrypted.toString('base64'))
-}
-
-export function clearApiKey(): void {
-  db.prepare(`DELETE FROM meta WHERE key = ?`).run(API_KEY_META_KEY)
 }

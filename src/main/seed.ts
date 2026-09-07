@@ -1,8 +1,8 @@
 import { app } from 'electron'
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import { getMeta, seedDeck, seedScenario, setMeta } from './db'
-import type { NewCardInput, PlanCheckpoint } from '../shared/types'
+import { getMeta, seedDeck, setMeta, upsertScenario } from './db'
+import type { NewCardInput, PlanCheckpoint, ScenarioKind } from '../shared/types'
 
 interface SeedWord {
   hanzi: string
@@ -11,13 +11,15 @@ interface SeedWord {
 }
 
 interface SeedScenario {
+  kind: ScenarioKind
   name: string
   description: string
+  tutorRole: string
   plan: PlanCheckpoint[]
 }
 
 /** Bump this whenever seed/*.json content changes so existing installs pick up new decks/scenarios. */
-const SEED_VERSION = '2'
+const SEED_VERSION = '4'
 
 const SEED_DECKS = [
   { file: 'hsk1.json', name: 'HSK 1', description: 'HSK Level 1 vocabulary (150 words)' },
@@ -45,9 +47,11 @@ export function seedIfNeeded(): void {
     seedDeck(deck.name, deck.description, cards)
   }
 
+  // Scenarios are upserted (not skipped) so plan tweaks reach existing installs; sessions
+  // reference scenarios by id, so a refreshed plan never orphans past sessions.
   const scenarios = JSON.parse(readFileSync(join(dir, 'scenarios.json'), 'utf-8')) as SeedScenario[]
   for (const scenario of scenarios) {
-    seedScenario(scenario.name, scenario.description, scenario.plan)
+    upsertScenario(scenario)
   }
 
   setMeta('seed_version', SEED_VERSION)
