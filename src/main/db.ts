@@ -878,6 +878,15 @@ export function getLesson(id: string): LessonDetail | null {
   return { ...summary, words, distractorPool }
 }
 
+/**
+ * Wipes all lesson progress. Called from seeding when a new SEED_VERSION regroups words into
+ * different lessons: progress is keyed by positional id (hsk1-03…), so old rows would otherwise
+ * attach a "completed" flag to a lesson that now teaches entirely different words.
+ */
+export function clearLessonProgress(): void {
+  db.prepare(`DELETE FROM lesson_progress`).run()
+}
+
 export function markLessonStarted(id: string): void {
   db.prepare(
     `INSERT INTO lesson_progress (lesson_id, status, started_at) VALUES (?, 'in_progress', ?)

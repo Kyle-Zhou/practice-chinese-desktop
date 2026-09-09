@@ -1,7 +1,7 @@
 import { app } from 'electron'
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import { getMeta, seedDeck, setMeta, upsertLesson, upsertScenario } from './db'
+import { clearLessonProgress, getMeta, seedDeck, setMeta, upsertLesson, upsertScenario } from './db'
 import { ensureProgressDeck } from './lessons'
 import type { LessonRecord, NewCardInput, PlanCheckpoint, ScenarioKind } from '../shared/types'
 
@@ -20,7 +20,7 @@ interface SeedScenario {
 }
 
 /** Bump this whenever seed/*.json content changes so existing installs pick up new decks/scenarios. */
-const SEED_VERSION = '5'
+const SEED_VERSION = '6'
 
 const SEED_DECKS = [
   { file: 'hsk1.json', name: 'HSK 1', description: 'HSK Level 1 vocabulary (150 words)' },
@@ -58,8 +58,11 @@ export function seedIfNeeded(): void {
     upsertScenario(scenario)
   }
 
-  // Lessons are upserted like scenarios: progress is keyed by lesson id, so refreshed content
-  // (better example sentences, say) reaches existing installs without resetting anyone's path.
+  // Lessons are upserted so refreshed content (better example sentences, say) reaches existing
+  // installs. Progress is cleared first because lesson ids are positional (hsk1-03…): the v6
+  // regrouping into themes means an id now points at different words, so carrying over a
+  // "completed" flag would be wrong. A fresh install simply has nothing to clear.
+  clearLessonProgress()
   const lessons = JSON.parse(readFileSync(join(dir, 'lessons.json'), 'utf-8')) as LessonRecord[]
   for (const lesson of lessons) {
     upsertLesson(lesson)
