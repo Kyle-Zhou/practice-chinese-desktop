@@ -2,8 +2,10 @@
  * Offline generator for seed/lessons.json.
  *
  * Lessons are static content shipped with the app, so this runs during development and its
- * output is committed. It slices the HSK seed word lists into lessons and attaches example
- * sentences mined from Tatoeba, with pinyin derived from CC-CEDICT.
+ * output is committed. It attaches example sentences mined from Tatoeba (pinyin from CC-CEDICT)
+ * to each HSK word, then groups the words into situational themed lessons via lessons-shared.mjs
+ * (themes live in seed/lesson-themes.json). To re-theme without re-mining, use
+ * regroup-lessons.mjs instead — it reshuffles the already-committed lessons.json offline.
  *
  * Download the inputs into a scratch directory first (they are far too large to commit):
  *   cedict_ts.u8         https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.zip
@@ -19,8 +21,8 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { numberedToToneMarks } from '../src/shared/pinyin.ts'
+import { buildThemedLessons, loadThemes } from './lessons-shared.mjs'
 
-const WORDS_PER_LESSON = 10
 const LEVELS = [
   { level: 1, file: 'hsk1.json', maxSentenceChars: 12 },
   { level: 2, file: 'hsk2.json', maxSentenceChars: 16 },
@@ -199,7 +201,7 @@ function main() {
   // so the known-character set grows as we walk up the levels.
   const knownChars = new Set()
   const usedSentences = new Set()
-  const lessons = []
+  const wordDataByLevel = {}
   let missingExamples = 0
 
   for (const level of levelWords) {
@@ -234,31 +236,27 @@ function main() {
       )
     }
 
-    for (let start = 0; start < level.words.length; start += WORDS_PER_LESSON) {
-      const slice = level.words.slice(start, start + WORDS_PER_LESSON)
-      const number = Math.floor(start / WORDS_PER_LESSON) + 1
-      const words = slice.map((word) => {
-        const examples = []
-        for (const candidate of candidates.get(word.hanzi) ?? []) {
-          if (examples.length === EXAMPLES_PER_WORD) break
-          if (usedSentences.has(candidate.hanzi)) continue
-          const pinyin = sentencePinyin(candidate.hanzi, bySimplified)
-          if (!pinyin) continue
-          usedSentences.add(candidate.hanzi)
-          examples.push({ hanzi: candidate.hanzi, pinyin, english: candidate.english })
-        }
-        if (examples.length === 0) missingExamples++
-        return { ...word, examples }
-      })
-      lessons.push({
-        id: `hsk${level.level}-${String(number).padStart(2, '0')}`,
-        name: `HSK ${level.level} · Lesson ${number}`,
-        level: level.level,
-        order: lessons.length + 1,
-        words
-      })
+    // Mine examples per word, keyed by hanzi. Grouping into themed lessons happens afterwards
+    // via the shared grouper, but examples are chosen here in seed order so the "used sentence"
+    // dedupe is deterministic and independent of how words are later grouped.
+    const data = new Map()
+    for (const word of level.words) {
+      const examples = []
+      for (const candidate of candidates.get(word.hanzi) ?? []) {
+        if (examples.length === EXAMPLES_PER_WORD) break
+        if (usedSentences.has(candidate.hanzi)) continue
+        const pinyin = sentencePinyin(candidate.hanzi, bySimplified)
+        if (!pinyin) continue
+        usedSentences.add(candidate.hanzi)
+        examples.push({ hanzi: candidate.hanzi, pinyin, english: candidate.english })
+      }
+      if (examples.length === 0) missingExamples++
+      data.set(word.hanzi, { ...word, examples })
     }
+    wordDataByLevel[level.level] = data
   }
+
+  const lessons = buildThemedLessons(loadThemes(), wordDataByLevel)
 
   writeFileSync(join('seed', 'lessons.json'), `${JSON.stringify(lessons, null, 2)}\n`)
   const wordCount = lessons.reduce((n, l) => n + l.words.length, 0)
