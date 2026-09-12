@@ -20,12 +20,13 @@ interface SeedScenario {
 }
 
 /** Bump this whenever seed/*.json content changes so existing installs pick up new decks/scenarios. */
-const SEED_VERSION = '6'
+const SEED_VERSION = '7'
 
 const SEED_DECKS = [
   { file: 'hsk1.json', name: 'HSK 1', description: 'HSK Level 1 vocabulary (150 words)' },
   { file: 'hsk2.json', name: 'HSK 2', description: 'HSK Level 2 vocabulary (150 words)' },
-  { file: 'hsk3.json', name: 'HSK 3', description: 'HSK Level 3 vocabulary (300 words)' }
+  { file: 'hsk3.json', name: 'HSK 3', description: 'HSK Level 3 vocabulary (300 words)' },
+  { file: 'hsk4.json', name: 'HSK 4', description: 'HSK Level 4 vocabulary (600 words)' }
 ]
 
 export function seedDir(): string {

@@ -666,7 +666,7 @@ let commonWords: Set<string> | null = null
 
 /**
  * CC-CEDICT carries no frequency data, so an obscure entry can outrank the word a learner
- * actually meant. The seeded HSK 1–3 vocabulary is a good enough frequency proxy: if a
+ * actually meant. The seeded HSK 1–4 vocabulary is a good enough frequency proxy: if a
  * headword is on it, it is almost certainly the intended answer.
  */
 function commonWordSet(): Set<string> {
