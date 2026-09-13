@@ -254,14 +254,7 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
 
   // Ending covers both views: whichever one you pressed it from, the wait looks the same.
   if (ending)
-    return (
-      <SessionSummarizing
-        themeName={session.scenarioName}
-        progress={progress}
-        correctionCount={corrections.length}
-        vocabCount={vocabAdded.length}
-      />
-    )
+    return <SessionSummarizing />
   const next = nextCheckpoint(session.plan, completedIds)
   const busy = phase !== 'idle'
   const capturing = voice.micState === 'capturing'

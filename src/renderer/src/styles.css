@@ -166,6 +166,62 @@ code {
   max-width: 1320px;
 }
 
+/* --- Shell: left navigation rail ---
+   Layout only — the sidebar reuses the existing paper/line/token vocabulary and the standard
+   .btn treatment for its items, so the visual language is unchanged; only the arrangement moves
+   from a top header to a left rail. */
+
+.app-shell {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.app-sidebar {
+  flex-shrink: 0;
+  width: 224px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 16px;
+  background: var(--paper);
+  border-right: var(--bw) solid var(--line);
+}
+
+.app-logo {
+  margin: 6px 8px 18px;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.app-nav-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Nav items are ordinary .btn pills stretched full width and left-aligned so they read as a
+   stacked list rather than a row of chips. Flex so an item can carry a leading icon. */
+.app-nav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+
+.app-nav-icon {
+  flex-shrink: 0;
+}
+
+/* Pins Settings to the foot of the rail, matching the reference layout. */
+.app-nav-bottom {
+  margin-top: auto;
+}
+
 /* --- Buttons ---
    Every button is a solid shape with no outline at all: a neutral fill for secondary actions,
    the highlight for the primary one, a soft red for destructive ones. Pressing moves the
@@ -1256,52 +1312,17 @@ input[type='radio'] {
   z-index: 60;
 }
 
-.session-ending-orb {
-  width: 132px;
-  height: 132px;
+.session-ending-spinner {
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  border: var(--bw) solid var(--line);
-  background: var(--yellow);
-  animation: voice-breathe 1.7s ease-in-out infinite;
+  border: 3px solid var(--line);
+  border-top-color: var(--ink);
+  animation: spin 0.8s linear infinite;
 }
 
-.session-ending-text {
-  text-align: center;
-  max-width: 460px;
-}
-
-.session-ending-text h2 {
-  margin: 0 0 8px;
-  font-size: 25px;
-}
-
-.session-ending-text p {
-  margin: 0;
-  color: var(--ink-2);
-  font-size: 15px;
-}
-
-.session-ending-stats {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.session-ending-stats li {
-  background: var(--yellow-soft);
-  border-radius: var(--r-pill);
-  padding: 9px 18px;
-  font-size: 14px;
-  color: var(--ink-2);
-}
-
-.session-ending-stats strong {
-  color: var(--ink);
-  font-weight: 750;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* --- Dictionary quick-add ---
@@ -1735,4 +1756,169 @@ input[type='radio'] {
   margin: -8px 0 22px;
   font-size: 19px;
   font-weight: 700;
+}
+
+/* --- Home / dashboard ---
+   Uses the same paper/line/ink/token vocabulary as the rest of the app: bordered cards, pill
+   buttons, and the green progress bars reused from the lesson path. */
+
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.home-greeting h2 {
+  margin: 0 0 4px;
+}
+
+.home-hero {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.home-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 22px 24px;
+  background: var(--paper);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-xl);
+}
+
+.home-action-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}
+
+.home-action-figure {
+  margin: 2px 0;
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.home-action-figure span {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.home-action-title {
+  margin: 2px 0;
+  font-size: 20px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+/* Keep the call-to-action pinned to the card's foot so the two hero cards line up. */
+.home-action .btn {
+  margin-top: auto;
+}
+
+.home-section h3,
+.home-tutor h3 {
+  margin: 0 0 14px;
+  font-size: 17px;
+}
+
+.home-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.home-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 20px;
+  background: var(--paper);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.home-stat-value {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.home-stat-total {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.home-stat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.home-levels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.home-level {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  padding: 16px 18px;
+  background: var(--paper);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--ink);
+  transition: border-color 0.14s ease;
+}
+
+.home-level:hover {
+  border-color: var(--yellow);
+}
+
+/* Level name on its own line above a spelled-out count, so "HSK 1" and "0 of 20" can't run
+   together into an ambiguous "HSK 10 / 20". */
+.home-level-name {
+  font-weight: 750;
+  font-size: 14.5px;
+}
+
+.home-level-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+  margin-bottom: 6px;
+}
+
+.home-tutor {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  background: var(--paper);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-xl);
+}
+
+.home-tutor h3 {
+  margin: 0 0 4px;
+}
+
+.home-tutor .btn {
+  flex-shrink: 0;
 }
