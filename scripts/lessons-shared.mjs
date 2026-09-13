@@ -11,7 +11,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-export const LEVELS = [1, 2, 3]
+export const LEVELS = [1, 2, 3, 4]
 
 export function loadThemes() {
   return JSON.parse(readFileSync(join('seed', 'lesson-themes.json'), 'utf-8'))

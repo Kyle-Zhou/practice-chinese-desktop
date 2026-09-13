@@ -20,6 +20,17 @@ for (const lesson of existing) {
   for (const word of lesson.words) wordDataByLevel[lesson.level].set(word.hanzi, word)
 }
 
+// A level with no mined examples yet (e.g. a newly added HSK level) falls back to its plain
+// seed/hskN.json vocabulary with no example sentences, rather than failing to regroup.
+for (const level of LEVELS) {
+  const deckWords = JSON.parse(readFileSync(join('seed', `hsk${level}.json`), 'utf-8'))
+  for (const word of deckWords) {
+    if (!wordDataByLevel[level].has(word.hanzi)) {
+      wordDataByLevel[level].set(word.hanzi, { ...word, examples: [] })
+    }
+  }
+}
+
 const lessons = buildThemedLessons(themes, wordDataByLevel)
 writeFileSync(join('seed', 'lessons.json'), `${JSON.stringify(lessons, null, 2)}\n`)
 
