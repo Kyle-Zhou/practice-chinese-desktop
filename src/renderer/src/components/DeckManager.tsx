@@ -103,26 +103,31 @@ export default function DeckManager({ deckId, onExit }: Props): React.JSX.Elemen
         </p>
         <div className="card-form-grid">
           <input
+            aria-label="Hanzi"
             placeholder="Hanzi (e.g. 你好)"
             value={form.hanzi}
             onChange={(e) => setForm({ ...form, hanzi: e.target.value })}
           />
           <input
+            aria-label="Pinyin"
             placeholder="Pinyin (e.g. nǐ hǎo)"
             value={form.pinyin}
             onChange={(e) => setForm({ ...form, pinyin: e.target.value })}
           />
           <input
+            aria-label="English"
             placeholder="English"
             value={form.english}
             onChange={(e) => setForm({ ...form, english: e.target.value })}
           />
           <input
+            aria-label="Audio file path (optional)"
             placeholder="Audio file path (optional)"
             value={form.audioPath}
             onChange={(e) => setForm({ ...form, audioPath: e.target.value })}
           />
           <input
+            aria-label="Notes (optional)"
             placeholder="Notes (optional)"
             value={form.notes}
             onChange={(e) => setForm({ ...form, notes: e.target.value })}

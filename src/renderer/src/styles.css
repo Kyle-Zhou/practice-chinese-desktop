@@ -24,7 +24,7 @@
   /* Ink */
   --ink: #17161a;
   --ink-2: #4a4750; /* secondary text */
-  --ink-3: #8b8892; /* tertiary text, placeholders */
+  --ink-3: #6e6b74; /* tertiary text, placeholders */
 
   /* Lines: light for quiet dividers, ink for anything pressable */
   --line: #e8e5df;
@@ -749,9 +749,12 @@ input[type='radio'] {
 
 .tutor-progress-fill {
   height: 100%;
+  width: 100%;
   background: var(--green);
   border-radius: var(--r-pill);
-  transition: width 0.3s ease;
+  transform: scaleX(var(--progress, 0));
+  transform-origin: left;
+  transition: transform 0.3s ease;
 }
 
 .tutor-layout {
@@ -1325,6 +1328,20 @@ input[type='radio'] {
   to { transform: rotate(360deg); }
 }
 
+/* Each orb state is already carried by fill color and by the status label text (see the
+   comment above voice-orb-connecting), so a reduced-motion user loses nothing but the loop
+   itself. The ending spinner is excluded: it is the only signal that the summary is being
+   written, with no color-coded state to fall back on. */
+@media (prefers-reduced-motion: reduce) {
+  .voice-orb-connecting,
+  .voice-orb-listening,
+  .voice-orb-transcribing,
+  .voice-orb-thinking,
+  .voice-orb-speaking {
+    animation: none;
+  }
+}
+
 /* --- Dictionary quick-add ---
    The results list is an overlay, so it needs the one shadow-free way to sit above the form:
    a 2px ink-weight border on white. */
@@ -1484,9 +1501,12 @@ input[type='radio'] {
 
 .lesson-level-fill {
   height: 100%;
+  width: 100%;
   background: var(--green);
   border-radius: var(--r-pill);
-  transition: width 0.3s ease;
+  transform: scaleX(var(--progress, 0));
+  transform-origin: left;
+  transition: transform 0.3s ease;
 }
 
 .lesson-grid {
@@ -1866,7 +1886,7 @@ input[type='radio'] {
 
 .home-levels {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -1921,4 +1941,27 @@ input[type='radio'] {
 
 .home-tutor .btn {
   flex-shrink: 0;
+}
+
+/* --- Narrow window ---
+   The window is user-resizable down to 720x560 (see BrowserWindow minWidth/minHeight in
+   src/main/index.ts), well below the widths these multi-column grids assume. */
+
+@media (max-width: 860px) {
+  .home-hero,
+  .card-form-grid,
+  .quiz-options {
+    grid-template-columns: 1fr;
+  }
+
+  .home-stats,
+  .home-levels {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .tutor-layout {
+    grid-template-columns: 1fr;
+  }
 }

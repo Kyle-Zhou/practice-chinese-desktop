@@ -62,7 +62,18 @@ export default function StudySession({ deckId, onExit }: Props): React.JSX.Eleme
         <span className="study-remaining">{remaining} remaining</span>
       </div>
 
-      <div className={`flashcard ${flipped ? 'flipped' : ''}`} onClick={() => setFlipped((f) => !f)}>
+      <div
+        className={`flashcard ${flipped ? 'flipped' : ''}`}
+        role="button"
+        tabIndex={0}
+        onClick={() => setFlipped((f) => !f)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            setFlipped((f) => !f)
+          }
+        }}
+      >
         <div className="flashcard-front">
           <span className="hanzi">{current.hanzi}</span>
         </div>

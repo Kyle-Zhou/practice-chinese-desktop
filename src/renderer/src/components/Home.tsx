@@ -59,7 +59,7 @@ export default function Home({
   // The frontier lesson: whatever is mid-flight, otherwise the next one unlocked.
   const nextLesson =
     lessons.find((l) => l.status === 'in_progress') ?? lessons.find((l) => l.status === 'available') ?? null
-  const levels = [1, 2, 3].map((level) => {
+  const levels = [1, 2, 3, 4].map((level) => {
     const group = lessons.filter((l) => l.level === level)
     return { level, done: group.filter((l) => l.status === 'completed').length, total: group.length }
   })
@@ -139,7 +139,10 @@ export default function Home({
                 {done} of {total} lessons
               </span>
               <div className="lesson-level-bar">
-                <div className="lesson-level-fill" style={{ width: `${total ? (done / total) * 100 : 0}%` }} />
+                <div
+                  className="lesson-level-fill"
+                  style={{ '--progress': total ? done / total : 0 } as React.CSSProperties}
+                />
               </div>
             </button>
           ))}

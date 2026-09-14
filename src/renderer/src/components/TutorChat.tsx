@@ -335,7 +335,7 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
       </div>
 
       <div className="tutor-progress-bar" title={`${progress}% of the plan covered`}>
-        <div className="tutor-progress-fill" style={{ width: `${progress}%` }} />
+        <div className="tutor-progress-fill" style={{ '--progress': progress / 100 } as React.CSSProperties} />
       </div>
 
       <div className="tutor-layout">

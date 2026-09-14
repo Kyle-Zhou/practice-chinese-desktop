@@ -164,7 +164,10 @@ export default function LessonView({ lessonId, onExit, onStudy }: Props): React.
         <Toolbar lesson={lesson} onExit={onExit} progress={`${queue.length} to go`} />
 
         <div className="lesson-level-bar">
-          <div className="lesson-level-fill" style={{ width: `${(answeredCount / questions.length) * 100}%` }} />
+          <div
+            className="lesson-level-fill"
+            style={{ '--progress': questions.length ? answeredCount / questions.length : 0 } as React.CSSProperties}
+          />
         </div>
 
         <div className="quiz-card">
