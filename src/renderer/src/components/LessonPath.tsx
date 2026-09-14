@@ -53,7 +53,10 @@ export default function LessonPath({ onOpenLesson, onExit }: Props): React.JSX.E
               </span>
             </div>
             <div className="lesson-level-bar">
-              <div className="lesson-level-fill" style={{ width: `${(done / group.length) * 100}%` }} />
+              <div
+                className="lesson-level-fill"
+                style={{ '--progress': group.length ? done / group.length : 0 } as React.CSSProperties}
+              />
             </div>
 
             <ul className="lesson-grid">

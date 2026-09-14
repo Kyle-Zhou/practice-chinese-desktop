@@ -79,6 +79,7 @@ export default function Settings({ onExit }: Props): React.JSX.Element {
           >
             <input
               type="password"
+              aria-label={secret.title}
               placeholder={secret.placeholder}
               value={inputs[secret.name]}
               onChange={(e) => setInputs((prev) => ({ ...prev, [secret.name]: e.target.value }))}
