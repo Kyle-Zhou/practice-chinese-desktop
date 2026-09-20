@@ -52,7 +52,17 @@
   --red: #ff5a5a;
   --red-press: #f04444;
   --red-soft: #ffedec;
+  --red-soft-press: #ffdcd9;
   --red-ink: #c81e1e;
+
+  /* Fixed near-black, independent of theme: text/icons on a bright yellow/green/red fill stay
+     ink-on-colour in both themes, per the rule above — only paper-on-paper text flips. */
+  --ink-solid: #17161a;
+
+  /* Neutral greys used outside the --fill scale: muted orb states, the scrollbar thumb. */
+  --neutral-muted: #e9e6e0;
+  --scrollbar-thumb: #ded9d0;
+  --scrollbar-thumb-hover: #c8c2b6;
 
   /* Geometry */
   --r-sm: 10px;
@@ -60,6 +70,36 @@
   --r-lg: 20px;
   --r-xl: 28px;
   --r-pill: 999px;
+}
+
+/* Dark mode: paper flips to ink, ink flips to paper, and the soft tints/ink pairings darken with
+   it. The bright fills (yellow/green/red) and --ink-solid stay put — the "ink on colour" rule
+   holds in both themes, so nothing pressable changes color. */
+[data-theme='dark'] {
+  --paper: #1a191e;
+  --paper-2: #221f27;
+
+  --ink: #f4f2ee;
+  --ink-2: #c9c5be;
+  --ink-3: #8f8b93;
+
+  --line: #322f38;
+
+  --fill: #29262f;
+  --fill-press: #34303a;
+
+  --yellow-soft: #3a3220;
+
+  --green-soft: #1c2e12;
+  --green-ink: #9fe066;
+
+  --red-soft: #3a1c1c;
+  --red-soft-press: #4a2424;
+  --red-ink: #ff8a8a;
+
+  --neutral-muted: #3a3740;
+  --scrollbar-thumb: #3a3740;
+  --scrollbar-thumb-hover: #524e59;
 }
 
 * {
@@ -256,7 +296,7 @@ code {
 
 .btn-primary {
   background: var(--yellow);
-  color: var(--ink);
+  color: var(--ink-solid);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -269,7 +309,7 @@ code {
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: #ffdcd9;
+  background: var(--red-soft-press);
 }
 
 .btn-small {
@@ -285,6 +325,7 @@ code {
 
 .btn-toggle-on:hover:not(:disabled) {
   background: var(--yellow);
+  color: var(--ink-solid);
 }
 
 /* --- Inputs --- */
@@ -323,6 +364,10 @@ select {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%2317161a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>");
   background-repeat: no-repeat;
   background-position: right 14px center;
+}
+
+[data-theme='dark'] select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%23f4f2ee' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>");
 }
 
 input[type='checkbox'],
@@ -508,7 +553,7 @@ input[type='radio'] {
 
 .btn-grade-again {
   background: var(--red);
-  color: var(--ink);
+  color: var(--ink-solid);
 }
 
 .btn-grade-again:hover:not(:disabled) {
@@ -517,7 +562,7 @@ input[type='radio'] {
 
 .btn-grade-hard {
   background: var(--yellow);
-  color: var(--ink);
+  color: var(--ink-solid);
 }
 
 .btn-grade-hard:hover:not(:disabled) {
@@ -526,7 +571,7 @@ input[type='radio'] {
 
 .btn-grade-good {
   background: var(--green-light);
-  color: var(--ink);
+  color: var(--ink-solid);
 }
 
 .btn-grade-good:hover:not(:disabled) {
@@ -535,7 +580,7 @@ input[type='radio'] {
 
 .btn-grade-easy {
   background: var(--green);
-  color: var(--ink);
+  color: var(--ink-solid);
 }
 
 .btn-grade-easy:hover:not(:disabled) {
@@ -667,6 +712,35 @@ input[type='radio'] {
   width: 100%;
 }
 
+.settings-toggle-group {
+  display: flex;
+  gap: 8px;
+}
+
+.settings-toggle {
+  font-size: 13px;
+  font-weight: 700;
+  border: var(--bw) solid var(--line);
+  background: var(--paper);
+  color: var(--ink-2);
+  border-radius: var(--r-pill);
+  padding: 7px 16px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.14s ease, color 0.14s ease;
+}
+
+.settings-toggle:hover {
+  background: var(--fill);
+}
+
+.settings-toggle-active,
+.settings-toggle-active:hover {
+  background: var(--yellow);
+  color: var(--ink-solid);
+  border-color: var(--yellow);
+}
+
 /* --- AI Tutor: shared --- */
 
 .tutor-section-title {
@@ -790,7 +864,7 @@ input[type='radio'] {
 .tutor-bubble-user {
   align-self: flex-end;
   background: var(--yellow);
-  color: var(--ink);
+  color: var(--ink-solid);
   border-bottom-right-radius: 7px;
 }
 
@@ -988,6 +1062,7 @@ input[type='radio'] {
 
 .tutor-mic-live {
   background: var(--red);
+  color: var(--ink-solid);
 }
 
 .tutor-mic-live:hover:not(:disabled) {
@@ -1093,6 +1168,7 @@ input[type='radio'] {
   font-size: 14px;
   font-weight: 750;
   background: var(--yellow);
+  color: var(--ink-solid);
   border-radius: var(--r-pill);
   padding: 7px 16px;
 }
@@ -1167,7 +1243,7 @@ input[type='radio'] {
 
 .voice-orb-muted,
 .voice-orb-paused {
-  background: #e9e6e0;
+  background: var(--neutral-muted);
 }
 
 @keyframes voice-breathe {
@@ -1260,7 +1336,7 @@ input[type='radio'] {
 
 .voice-annotation-toggle-active {
   background: var(--yellow);
-  color: var(--ink);
+  color: var(--ink-solid);
 }
 
 .voice-correction {
@@ -1307,10 +1383,12 @@ input[type='radio'] {
 
 .voice-control-active {
   background: var(--yellow);
+  color: var(--ink-solid);
 }
 
 .voice-control-end {
   background: var(--red);
+  color: var(--ink-solid);
 }
 
 .voice-control-end:hover:not(:disabled) {
@@ -1331,13 +1409,13 @@ input[type='radio'] {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #ded9d0;
+  background: var(--scrollbar-thumb);
   border-radius: var(--r-pill);
   border: 3px solid var(--paper);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #c8c2b6;
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* --- Ending a session ---
@@ -1488,6 +1566,7 @@ input[type='radio'] {
 
 .learn-banner:hover {
   background: var(--yellow);
+  color: var(--ink-solid);
 }
 
 .learn-banner-text {
@@ -1720,7 +1799,7 @@ input[type='radio'] {
 .lesson-step-completed .lesson-step-marker {
   background: var(--green);
   border-color: var(--green);
-  color: var(--ink);
+  color: var(--ink-solid);
 }
 
 .lesson-step-in_progress .lesson-step-btn,
@@ -1732,7 +1811,7 @@ input[type='radio'] {
 .lesson-step-available .lesson-step-marker {
   background: var(--yellow);
   border-color: var(--yellow);
-  color: var(--ink);
+  color: var(--ink-solid);
 }
 
 .lesson-step-locked {
