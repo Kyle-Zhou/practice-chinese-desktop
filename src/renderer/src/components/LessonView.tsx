@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTtsPlayer } from '../hooks/useTtsPlayer'
-import { buildQuiz, checkAnswer, expectedAnswer, seedFromId } from '@shared/quiz'
+import { buildQuiz, checkAnswer, expectedAnswer, isTypedQuestion, seedFromId } from '@shared/quiz'
 import { shortGloss } from '@shared/text'
 import type { QuizQuestion } from '@shared/quiz'
 import type { AppSettings, LessonCompletion, LessonDetail, LessonWord } from '@shared/types'
@@ -21,9 +21,11 @@ interface Verdict {
 const QUESTION_TITLE: Record<QuizQuestion['kind'], string> = {
   hanziToEnglish: 'What does this mean?',
   englishToHanzi: 'Which word is this?',
+  englishToPinyinChoice: 'Which pinyin is this?',
   fillBlank: 'Fill in the blank',
   listening: 'Which word did you hear?',
-  typePinyin: 'Type the pinyin'
+  typePinyin: 'Type the pinyin',
+  englishToPinyinType: 'Type the pinyin for this word'
 }
 
 export default function LessonView({ lessonId, onExit, onStudy }: Props): React.JSX.Element {
@@ -41,6 +43,7 @@ export default function LessonView({ lessonId, onExit, onStudy }: Props): React.
   const [completion, setCompletion] = useState<LessonCompletion | null>(null)
 
   const { speak, cancel } = useTtsPlayer({ enabled: true, provider: settings?.ttsProvider ?? 'system' })
+  const showPinyin = settings?.showPinyin ?? true
 
   useEffect(() => {
     window.api.settings.get().then(setSettings)
@@ -121,7 +124,7 @@ export default function LessonView({ lessonId, onExit, onStudy }: Props): React.
               🔊 Play
             </button>
           </div>
-          <p className="pinyin">{word.pinyin}</p>
+          {showPinyin && <p className="pinyin">{word.pinyin}</p>}
           <p className="english">{word.english}</p>
 
           {word.examples.length > 0 && (
@@ -131,7 +134,7 @@ export default function LessonView({ lessonId, onExit, onStudy }: Props): React.
                   <button className="lesson-example-hanzi" onClick={() => speak(example.hanzi)}>
                     {example.hanzi}
                   </button>
-                  <span className="lesson-example-pinyin">{example.pinyin}</span>
+                  {showPinyin && <span className="lesson-example-pinyin">{example.pinyin}</span>}
                   <span className="lesson-example-english">{example.english}</span>
                 </li>
               ))}
@@ -159,6 +162,15 @@ export default function LessonView({ lessonId, onExit, onStudy }: Props): React.
 
   if (phase === 'quiz' && question) {
     const answeredCount = questions.length - queue.length
+    // typePinyin and listening deliberately withhold pinyin even when the toggle is on — showing
+    // it would hand over the answer they're specifically testing for.
+    const quizPromptPinyin = !showPinyin
+      ? null
+      : question.kind === 'hanziToEnglish'
+        ? question.word.pinyin
+        : question.kind === 'fillBlank'
+          ? (question.example?.pinyin ?? null)
+          : null
     return (
       <div className="lesson-view">
         <Toolbar lesson={lesson} onExit={onExit} progress={`${queue.length} to go`} />
@@ -178,12 +190,25 @@ export default function LessonView({ lessonId, onExit, onStudy }: Props): React.
               🔊 Play again
             </button>
           ) : (
-            <p className={question.kind === 'englishToHanzi' ? 'quiz-prompt-english' : 'quiz-prompt-hanzi'}>
-              {question.prompt}
-            </p>
+            <>
+              <p
+                className={
+                  question.kind === 'englishToHanzi' ||
+                  question.kind === 'englishToPinyinChoice' ||
+                  question.kind === 'englishToPinyinType'
+                    ? 'quiz-prompt-english'
+                    : `quiz-prompt-hanzi ${quizPromptPinyin ? 'quiz-prompt-hanzi-tight' : ''}`
+                }
+              >
+                {question.prompt}
+              </p>
+              {/* Shown for kinds that display hanzi without already asking for its pronunciation —
+                  typePinyin and listening deliberately withhold it so the quiz stays meaningful. */}
+              {quizPromptPinyin && <p className="quiz-prompt-pinyin">{quizPromptPinyin}</p>}
+            </>
           )}
 
-          {question.kind === 'typePinyin' ? (
+          {isTypedQuestion(question) ? (
             <form
               className="quiz-type-form"
               onSubmit={(e) => {
@@ -224,12 +249,13 @@ export default function LessonView({ lessonId, onExit, onStudy }: Props): React.
                 <strong>{verdict.correct ? 'Correct' : 'Not quite'}</strong>
                 {!verdict.correct && <span> — {verdict.expected}</span>}
                 <p className="quiz-verdict-word">
-                  {question.word.hanzi} · {question.word.pinyin} · {shortGloss(question.word.english)}
+                  {question.word.hanzi} · {showPinyin && `${question.word.pinyin} · `}
+                  {shortGloss(question.word.english)}
                 </p>
               </div>
-              {/* The typed-pinyin round already has a Continue button in its form, where
+              {/* The typed-pinyin rounds already have a Continue button in their form, where
                   the Enter key also lands. */}
-              {question.kind !== 'typePinyin' && (
+              {!isTypedQuestion(question) && (
                 <button className="btn btn-primary" onClick={() => void next()}>
                   Continue
                 </button>
@@ -260,7 +286,8 @@ export default function LessonView({ lessonId, onExit, onStudy }: Props): React.
           <ul className="tutor-vocab-list">
             {completion.added.map((word) => (
               <li key={word.hanzi}>
-                <span className="hanzi-inline">{word.hanzi}</span> {word.pinyin} — {shortGloss(word.english)}
+                <span className="hanzi-inline">{word.hanzi}</span> {showPinyin && `${word.pinyin} — `}
+                {shortGloss(word.english)}
               </li>
             ))}
           </ul>

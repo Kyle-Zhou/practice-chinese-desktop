@@ -10,7 +10,14 @@ import { pinyinMatches } from './pinyin'
 import { shortGloss } from './text'
 import type { LessonExample, LessonWord } from './types'
 
-export type QuizKind = 'hanziToEnglish' | 'englishToHanzi' | 'fillBlank' | 'listening' | 'typePinyin'
+export type QuizKind =
+  | 'hanziToEnglish'
+  | 'englishToHanzi'
+  | 'englishToPinyinChoice'
+  | 'fillBlank'
+  | 'listening'
+  | 'typePinyin'
+  | 'englishToPinyinType'
 
 interface QuizBase {
   id: string
@@ -21,7 +28,7 @@ interface QuizBase {
 }
 
 export interface ChoiceQuestion extends QuizBase {
-  kind: 'hanziToEnglish' | 'englishToHanzi' | 'fillBlank' | 'listening'
+  kind: 'hanziToEnglish' | 'englishToHanzi' | 'englishToPinyinChoice' | 'fillBlank' | 'listening'
   options: string[]
   answerIndex: number
   /** Only set for fillBlank: the sentence the blank was cut from. */
@@ -31,7 +38,7 @@ export interface ChoiceQuestion extends QuizBase {
 }
 
 export interface TypePinyinQuestion extends QuizBase {
-  kind: 'typePinyin'
+  kind: 'typePinyin' | 'englishToPinyinType'
   answer: string
 }
 
@@ -73,13 +80,19 @@ function shuffle<T>(items: T[], random: () => number): T[] {
 
 /**
  * Picks distractors that are actually distinguishable from the answer: never the same
- * characters, and never a synonym that would make two options both correct.
+ * characters, and never an option (by `optionKey`) that would make two choices both correct.
+ * Defaults to comparing English glosses; pass a pinyin key for pinyin-based questions so two
+ * homophones never both appear as "the" answer.
  */
-function pickDistractors(word: LessonWord, pool: LessonWord[], random: () => number, count: number): LessonWord[] {
-  const answerGloss = shortGloss(word.english).toLowerCase()
-  const candidates = pool.filter(
-    (other) => other.hanzi !== word.hanzi && shortGloss(other.english).toLowerCase() !== answerGloss
-  )
+function pickDistractors(
+  word: LessonWord,
+  pool: LessonWord[],
+  random: () => number,
+  count: number,
+  optionKey: (w: LessonWord) => string = (w) => shortGloss(w.english).toLowerCase()
+): LessonWord[] {
+  const answerKey = optionKey(word)
+  const candidates = pool.filter((other) => other.hanzi !== word.hanzi && optionKey(other) !== answerKey)
   return shuffle(candidates, random).slice(0, count)
 }
 
@@ -155,6 +168,34 @@ export function buildTypePinyin(word: LessonWord): TypePinyinQuestion {
   }
 }
 
+/** Given the English gloss, pick the matching pinyin from a set of options — no hanzi involved. */
+export function buildEnglishToPinyinChoice(
+  word: LessonWord,
+  pool: LessonWord[],
+  random: () => number
+): ChoiceQuestion | null {
+  const pinyinKey = (w: LessonWord): string => w.pinyin.toLowerCase()
+  const distractors = pickDistractors(word, pool, random, OPTION_COUNT - 1, pinyinKey)
+  if (distractors.length < OPTION_COUNT - 1) return null
+  return choiceQuestion(
+    { id: `${word.hanzi}:englishToPinyinChoice`, kind: 'englishToPinyinChoice', word, prompt: shortGloss(word.english) },
+    word.pinyin,
+    distractors.map((d) => d.pinyin),
+    random
+  )
+}
+
+/** Given the English gloss, type the pinyin from scratch — the direct "spoken vocab" drill. */
+export function buildEnglishToPinyinType(word: LessonWord): TypePinyinQuestion {
+  return {
+    id: `${word.hanzi}:englishToPinyinType`,
+    kind: 'englishToPinyinType',
+    word,
+    prompt: shortGloss(word.english),
+    answer: word.pinyin
+  }
+}
+
 /**
  * Builds `perWord` questions for every word, drawing distractors from the lesson's own words
  * plus the rest of the level. Kinds are chosen per word so a lesson mixes all four formats.
@@ -170,13 +211,17 @@ export function buildQuiz(
   const questions: QuizQuestion[] = []
 
   for (const word of words) {
+    // englishToHanzi (recognize the target character among options) is deliberately left out of
+    // the default rotation: the goal here is spoken vocabulary, not new-symbol recognition, so
+    // its English-prompt slot goes to the pinyin-production questions instead.
     const builders: (() => QuizQuestion | null)[] = shuffle(
       [
         () => buildMultipleChoice(word, pool, 'hanziToEnglish', random),
-        () => buildMultipleChoice(word, pool, 'englishToHanzi', random),
+        () => buildEnglishToPinyinChoice(word, pool, random),
         () => buildFillBlank(word, pool, random),
         () => buildListening(word, pool, random),
-        () => buildTypePinyin(word)
+        () => buildTypePinyin(word),
+        () => buildEnglishToPinyinType(word)
       ],
       random
     )
@@ -194,9 +239,14 @@ export function buildQuiz(
   return shuffle(questions, random)
 }
 
+/** True for the two typed-response kinds (hanzi→pinyin and English→pinyin), which share a text input UI. */
+export function isTypedQuestion(question: QuizQuestion): question is TypePinyinQuestion {
+  return question.kind === 'typePinyin' || question.kind === 'englishToPinyinType'
+}
+
 /** Grades a response: an option index for choice questions, typed text for pinyin. */
 export function checkAnswer(question: QuizQuestion, response: number | string): boolean {
-  if (question.kind === 'typePinyin') {
+  if (isTypedQuestion(question)) {
     return typeof response === 'string' && pinyinMatches(response, question.answer)
   }
   return response === question.answerIndex
@@ -204,5 +254,5 @@ export function checkAnswer(question: QuizQuestion, response: number | string): 
 
 /** The answer to show after a wrong response. */
 export function expectedAnswer(question: QuizQuestion): string {
-  return question.kind === 'typePinyin' ? question.answer : question.options[question.answerIndex]
+  return isTypedQuestion(question) ? question.answer : question.options[question.answerIndex]
 }

@@ -33,6 +33,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('dictionary:ready', () => dictionaryReady())
   ipcMain.handle('dictionary:search', (_e, query: string, limit?: number) => db.searchDictionary(query, limit))
+  ipcMain.handle('dictionary:annotate', (_e, text: string) => db.annotateHanzi(text))
 
   ipcMain.handle('lessons:list', () => db.listLessons())
   ipcMain.handle('lessons:get', (_e, id: string) => db.getLesson(id))

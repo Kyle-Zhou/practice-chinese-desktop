@@ -17,10 +17,15 @@ export default function StudySession({ deckId, onExit }: Props): React.JSX.Eleme
   const [queue, setQueue] = useState<Card[] | null>(null)
   const [flipped, setFlipped] = useState(false)
   const [reviewedCount, setReviewedCount] = useState(0)
+  const [showPinyin, setShowPinyin] = useState(true)
 
   useEffect(() => {
     window.api.study.dueCards(deckId).then(setQueue)
   }, [deckId])
+
+  useEffect(() => {
+    window.api.settings.get().then((s) => setShowPinyin(s.showPinyin))
+  }, [])
 
   const current = queue?.[0] ?? null
 
@@ -79,7 +84,7 @@ export default function StudySession({ deckId, onExit }: Props): React.JSX.Eleme
         </div>
         {flipped && (
           <div className="flashcard-back">
-            <p className="pinyin">{current.pinyin}</p>
+            {showPinyin && <p className="pinyin">{current.pinyin}</p>}
             <p className="english">{current.english}</p>
             {current.audioPath && (
               <audio controls src={`file://${current.audioPath}`} onClick={(e) => e.stopPropagation()} />

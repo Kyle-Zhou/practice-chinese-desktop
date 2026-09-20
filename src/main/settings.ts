@@ -47,8 +47,10 @@ const DEFAULT_SETTINGS: AppSettings = {
   autoSpeak: true,
   ttsProvider: 'openai',
   ttsVoice: 'nova',
-  voiceMode: 'handsFree',
-  replyModel: 'fast'
+  voiceMode: 'pushToTalk',
+  replyModel: 'fast',
+  showPinyin: true,
+  voiceShowEnglish: false
 }
 
 export function getSettings(): AppSettings {

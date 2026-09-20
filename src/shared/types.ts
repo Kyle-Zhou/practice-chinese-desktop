@@ -70,6 +70,17 @@ export interface AppSettings {
   ttsVoice: string
   voiceMode: VoiceMode
   replyModel: ReplyModelTier
+  /** Show pinyin throughout the app — lessons, flashcards, tutor captions and summaries. Default on;
+   *  flip off once you're leaning on hanzi + sound rather than the romanization crutch. */
+  showPinyin: boolean
+  /** Show an English gloss line under the tutor's caption in the voice screen. */
+  voiceShowEnglish: boolean
+}
+
+/** Best-effort pinyin + English gloss for a run of text, looked up word-by-word in the local dictionary. */
+export interface TextAnnotation {
+  pinyin: string
+  english: string
 }
 
 // --- AI Tutor ---
