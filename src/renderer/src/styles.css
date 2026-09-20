@@ -1510,35 +1510,104 @@ input[type='radio'] {
   max-width: 620px;
 }
 
-.lesson-level {
-  margin-bottom: 32px;
+.lesson-level-card {
+  margin-bottom: 18px;
+  padding: 20px 22px;
+  background: var(--paper);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-xl);
+  transition: background-color 0.14s ease, border-color 0.14s ease;
 }
 
-.lesson-level-head {
+.lesson-level-card--active {
+  background: var(--yellow-soft);
+  border-color: var(--yellow);
+}
+
+.lesson-level-card--completed {
+  background: var(--green-soft);
+  border-color: var(--green-light);
+}
+
+/* Locked levels are dimmed but still pressable — the escape hatch for anyone who already
+   knows the earlier vocabulary. */
+.lesson-level-card--locked {
+  opacity: 0.55;
+}
+
+.lesson-level-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+  padding: 0;
   margin-bottom: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--ink);
+  text-align: left;
 }
 
-.lesson-level-head h3 {
+.lesson-level-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lesson-level-heading h3 {
   margin: 0;
-  font-size: 17px;
+  font-size: 18px;
+}
+
+.lesson-level-status-pill {
+  padding: 3px 10px;
+  background: var(--fill);
+  border-radius: var(--r-pill);
+  font-size: 11.5px;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.lesson-level-card--completed .lesson-level-status-pill {
+  background: var(--paper);
+  color: var(--green-ink);
+}
+
+.lesson-level-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .lesson-level-count {
   color: var(--ink-3);
   font-size: 13.5px;
   font-weight: 650;
+  white-space: nowrap;
+}
+
+.lesson-level-chevron {
+  display: flex;
+  color: var(--ink-3);
+  transition: transform 0.18s ease;
+}
+
+.lesson-level-chevron-open {
+  transform: rotate(180deg);
 }
 
 .lesson-level-bar {
-  height: 12px;
+  height: 10px;
   background: var(--paper);
   border: var(--bw) solid var(--line);
   border-radius: var(--r-pill);
   overflow: hidden;
-  margin-bottom: 14px;
 }
 
 .lesson-level-fill {
@@ -1551,64 +1620,136 @@ input[type='radio'] {
   transition: transform 0.3s ease;
 }
 
-.lesson-grid {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 10px;
+.lesson-level-body {
+  margin-top: 16px;
 }
 
-.lesson-chip {
+.lesson-level-frontier {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.lesson-preview-bubble {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  width: 100%;
-  text-align: left;
-  padding: 14px 16px;
+  gap: 2px;
+  padding: 10px 14px;
   background: var(--paper);
   border: var(--bw) solid var(--line);
   border-radius: var(--r-lg);
-  cursor: pointer;
-  font-family: inherit;
-  color: var(--ink);
-  transition: border-color 0.14s ease, background-color 0.14s ease;
 }
 
-.lesson-chip:hover {
-  border-color: var(--yellow);
-}
-
-.lesson-chip-name {
-  font-size: 15px;
-  font-weight: 750;
-}
-
-.lesson-chip-meta {
-  font-size: 12.5px;
-  font-weight: 600;
+.lesson-preview-pinyin {
+  font-size: 11.5px;
+  font-weight: 650;
   color: var(--ink-3);
 }
 
-.lesson-chip-completed {
-  background: var(--green-soft);
-  border-color: var(--green-light);
+.lesson-preview-hanzi {
+  font-size: 16px;
+  font-weight: 750;
 }
 
-.lesson-chip-completed .lesson-chip-meta {
-  color: var(--green-ink);
+.lesson-preview-english {
+  font-size: 12.5px;
+  color: var(--ink-2);
 }
 
-.lesson-chip-in_progress {
+.lesson-level-cta {
+  white-space: nowrap;
+}
+
+.lesson-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lesson-step {
+  position: relative;
+}
+
+.lesson-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 23px;
+  top: 38px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--line);
+}
+
+.lesson-step-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px 8px 4px;
+  background: none;
+  border: none;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--ink);
+  transition: background-color 0.14s ease;
+}
+
+.lesson-step-btn:hover {
+  background: var(--fill);
+}
+
+.lesson-step-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  background: var(--paper);
+  border: var(--bw) solid var(--line);
+  border-radius: 50%;
+  color: var(--ink-3);
+  position: relative;
+  z-index: 1;
+}
+
+.lesson-step-completed .lesson-step-marker {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--ink);
+}
+
+.lesson-step-in_progress .lesson-step-btn,
+.lesson-step-available .lesson-step-btn {
   background: var(--yellow-soft);
-  border-color: var(--yellow);
 }
 
-/* Locked lessons are dimmed but still pressable — the escape hatch for anyone who already
-   knows the early vocabulary. */
-.lesson-chip-locked {
-  opacity: 0.5;
+.lesson-step-in_progress .lesson-step-marker,
+.lesson-step-available .lesson-step-marker {
+  background: var(--yellow);
+  border-color: var(--yellow);
+  color: var(--ink);
+}
+
+.lesson-step-locked {
+  opacity: 0.55;
+}
+
+.lesson-step-name {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.lesson-step-meta {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+  white-space: nowrap;
 }
 
 /* --- Learn: lesson --- */
@@ -1962,6 +2103,12 @@ input[type='radio'] {
 
 .home-level:hover {
   border-color: var(--yellow);
+}
+
+.home-level-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Level name on its own line above a spelled-out count, so "HSK 1" and "0 of 20" can't run

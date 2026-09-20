@@ -95,6 +95,13 @@ export default function Home({
                 HSK {nextLesson.level} · {nextLesson.wordCount} words
                 {nextLesson.status === 'in_progress' ? ' · in progress' : ''}
               </p>
+              {nextLesson.previewExample && (
+                <div className="lesson-preview-bubble">
+                  <span className="lesson-preview-pinyin">{nextLesson.previewExample.pinyin}</span>
+                  <span className="lesson-preview-hanzi">{nextLesson.previewExample.hanzi}</span>
+                  <span className="lesson-preview-english">{nextLesson.previewExample.english}</span>
+                </div>
+              )}
               <button className="btn btn-primary" onClick={() => onOpenLesson(nextLesson.id)}>
                 {nextLesson.status === 'in_progress' ? 'Resume lesson' : 'Start lesson'}
               </button>
@@ -134,7 +141,10 @@ export default function Home({
         <div className="home-levels">
           {levels.map(({ level, done, total }) => (
             <button key={level} className="home-level" onClick={onGoLearn}>
-              <span className="home-level-name">HSK {level}</span>
+              <span className="home-level-heading">
+                <span className="home-level-name">HSK {level}</span>
+                {total > 0 && done === total && <span className="lesson-level-status-pill">Done</span>}
+              </span>
               <span className="home-level-count">
                 {done} of {total} lessons
               </span>
