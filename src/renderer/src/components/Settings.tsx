@@ -1,10 +1,26 @@
 import { useEffect, useState } from 'react'
-import type { AppSettings, ReplyModelTier, SecretName, SttProvider, TtsProvider, VoiceMode } from '@shared/types'
+import type {
+  AppSettings,
+  AppTheme,
+  ReplyModelTier,
+  SecretName,
+  SttProvider,
+  TtsProvider,
+  VoiceMode
+} from '@shared/types'
 
 const OPENAI_VOICES = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'fable', 'nova', 'onyx', 'sage', 'shimmer', 'verse']
 
+const THEMES: { value: AppTheme; label: string }[] = [
+  { value: 'light', label: 'Light' },
+  { value: 'dark', label: 'Dark' },
+  { value: 'system', label: 'System' }
+]
+
 interface Props {
   onExit: () => void
+  theme: AppTheme
+  onThemeChange: (theme: AppTheme) => void
 }
 
 const SECRETS: { name: SecretName; title: string; placeholder: string; blurb: string }[] = [
@@ -22,7 +38,7 @@ const SECRETS: { name: SecretName; title: string; placeholder: string; blurb: st
   }
 ]
 
-export default function Settings({ onExit }: Props): React.JSX.Element {
+export default function Settings({ onExit, theme, onThemeChange }: Props): React.JSX.Element {
   const [status, setStatus] = useState<Record<SecretName, boolean> | null>(null)
   const [settings, setSettings] = useState<AppSettings | null>(null)
   const [inputs, setInputs] = useState<Record<SecretName, string>>({ anthropic: '', openai: '' })
@@ -65,6 +81,21 @@ export default function Settings({ onExit }: Props): React.JSX.Element {
 
       <div className="settings-card">
         <h3>Display</h3>
+        <div className="settings-field">
+          <span>Theme</span>
+          <div className="settings-toggle-group">
+            {THEMES.map((t) => (
+              <button
+                key={t.value}
+                type="button"
+                className={`settings-toggle ${theme === t.value ? 'settings-toggle-active' : ''}`}
+                onClick={() => onThemeChange(t.value)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <label className="settings-field settings-field-inline">
           <input type="checkbox" checked={settings.showPinyin} onChange={(e) => patch({ showPinyin: e.target.checked })} />
           <span>Show pinyin everywhere</span>

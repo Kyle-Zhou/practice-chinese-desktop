@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTheme } from './hooks/useTheme'
 import Home from './components/Home'
 import DeckList from './components/DeckList'
 import StudySession from './components/StudySession'
@@ -36,6 +37,7 @@ function sectionForView(name: View['name']): Section {
 export default function App(): React.JSX.Element {
   const [view, setView] = useState<View>({ name: 'home' })
   const section = sectionForView(view.name)
+  const { theme, setTheme } = useTheme()
 
   const navItemClass = (target: Section): string =>
     `btn app-nav-item ${section === target ? 'btn-toggle-on' : ''}`
@@ -116,7 +118,9 @@ export default function App(): React.JSX.Element {
               onStudy={(deckId) => setView({ name: 'study', deckId })}
             />
           )}
-          {view.name === 'settings' && <Settings onExit={() => setView({ name: 'decks' })} />}
+          {view.name === 'settings' && (
+            <Settings onExit={() => setView({ name: 'decks' })} theme={theme} onThemeChange={setTheme} />
+          )}
           {view.name === 'tutorPicker' && (
             <TutorScenarioPicker
               onExit={() => setView({ name: 'decks' })}

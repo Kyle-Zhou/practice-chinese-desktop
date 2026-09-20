@@ -57,7 +57,11 @@ export type VoiceMode = 'handsFree' | 'pushToTalk'
 /** 'fast' = Haiku 4.5 (lowest latency); 'smart' = Sonnet 5 (better free-form tutoring). */
 export type ReplyModelTier = 'fast' | 'smart'
 
+/** 'system' follows the OS light/dark preference and updates live if it changes. */
+export type AppTheme = 'light' | 'dark' | 'system'
+
 export interface AppSettings {
+  theme: AppTheme
   sttProvider: SttProvider
   /** Path to the whisper.cpp CLI binary (only used when sttProvider === 'whisper-cli'). */
   whisperCliPath: string

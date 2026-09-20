@@ -19,6 +19,7 @@ type Phase = 'idle' | 'opening' | 'transcribing' | 'thinking' | 'replying' | 'an
 const MIN_ENDING_MS = 700
 
 const DEFAULT_SETTINGS: AppSettings = {
+  theme: 'system',
   sttProvider: 'openai',
   whisperCliPath: '',
   whisperModelPath: '',

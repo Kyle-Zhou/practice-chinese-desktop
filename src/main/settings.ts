@@ -41,6 +41,7 @@ export function listSecretStatus(): Record<SecretName, boolean> {
 const SETTINGS_META_KEY = 'app_settings'
 
 const DEFAULT_SETTINGS: AppSettings = {
+  theme: 'system',
   sttProvider: 'openai',
   whisperCliPath: '',
   whisperModelPath: '',
