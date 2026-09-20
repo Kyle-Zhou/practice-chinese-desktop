@@ -886,16 +886,18 @@ const LESSON_SELECT = `
   FROM lessons l LEFT JOIN lesson_progress p ON p.lesson_id = l.id`
 
 function lessonSummaryFromRow(row: LessonRow, status: LessonStatus): LessonSummary {
+  const words = JSON.parse(row.words) as LessonWord[]
   return {
     id: row.id,
     name: row.name,
     level: row.level,
     order: row.sort_order,
-    wordCount: (JSON.parse(row.words) as LessonWord[]).length,
+    wordCount: words.length,
     status,
     correct: row.correct,
     total: row.total,
-    completedAt: row.completed_at
+    completedAt: row.completed_at,
+    previewExample: words[0]?.examples[0] ?? null
   }
 }
 

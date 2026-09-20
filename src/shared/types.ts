@@ -291,6 +291,8 @@ export interface LessonSummary {
   correct: number | null
   total: number | null
   completedAt: string | null
+  /** First example sentence of the lesson's first word, for a preview snippet. */
+  previewExample: LessonExample | null
 }
 
 export interface LessonDetail extends LessonSummary {
