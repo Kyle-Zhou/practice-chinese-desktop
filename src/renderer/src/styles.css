@@ -1165,7 +1165,8 @@ input[type='radio'] {
   animation: voice-pulse 1.15s ease-in-out infinite;
 }
 
-.voice-orb-muted {
+.voice-orb-muted,
+.voice-orb-paused {
   background: #e9e6e0;
 }
 
@@ -1219,6 +1220,47 @@ input[type='radio'] {
   letter-spacing: -0.01em;
   color: var(--ink);
   min-height: 1.45em;
+}
+
+.voice-caption-pinyin {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--ink-2);
+}
+
+.voice-caption-english {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 550;
+  color: var(--ink-3);
+  font-style: italic;
+}
+
+.voice-caption-toggles {
+  display: flex;
+  gap: 8px;
+}
+
+.voice-annotation-toggle {
+  font-size: 12px;
+  font-weight: 750;
+  border: var(--bw) solid var(--line);
+  background: var(--paper);
+  color: var(--ink-2);
+  border-radius: var(--r-pill);
+  padding: 5px 13px;
+  cursor: pointer;
+  transition: background-color 0.14s ease;
+}
+
+.voice-annotation-toggle:hover {
+  background: var(--fill);
+}
+
+.voice-annotation-toggle-active {
+  background: var(--yellow);
+  color: var(--ink);
 }
 
 .voice-correction {
@@ -1676,10 +1718,22 @@ input[type='radio'] {
   line-height: 1.35;
 }
 
+/* Used instead of .quiz-prompt-hanzi's margin when a .quiz-prompt-pinyin line follows it. */
+.quiz-prompt-hanzi-tight {
+  margin-bottom: 6px;
+}
+
 .quiz-prompt-english {
   margin: 0 0 26px;
   font-size: 26px;
   font-weight: 700;
+}
+
+.quiz-prompt-pinyin {
+  margin: 0 0 26px;
+  color: var(--green-ink);
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .quiz-replay {

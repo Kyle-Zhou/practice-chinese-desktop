@@ -25,8 +25,10 @@ const DEFAULT_SETTINGS: AppSettings = {
   autoSpeak: true,
   ttsProvider: 'openai',
   ttsVoice: 'nova',
-  voiceMode: 'handsFree',
-  replyModel: 'fast'
+  voiceMode: 'pushToTalk',
+  replyModel: 'fast',
+  showPinyin: true,
+  voiceShowEnglish: false
 }
 
 export default function TutorChat({ sessionId, onExit, onComplete }: Props): React.JSX.Element {
@@ -41,8 +43,9 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
   const [phase, setPhase] = useState<Phase>('idle')
   const [ending, setEnding] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [voiceView, setVoiceView] = useState(false)
+  const [voiceView, setVoiceView] = useState(true)
   const [muted, setMuted] = useState(false)
+  const [paused, setPaused] = useState(false)
   const [lastSttMs, setLastSttMs] = useState<number | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   /** The in-flight turn (or opening) so a queued utterance waits for it before sending. */
@@ -59,7 +62,6 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
     Promise.all([window.api.settings.get(), window.api.tutor.getSession(sessionId)]).then(([s, sess]) => {
       if (cancelled) return
       setSettings(s)
-      setVoiceView(s.voiceMode === 'handsFree')
       setSession(sess)
       setMessages(sess.transcript)
       setCorrections(sess.corrections)
@@ -164,7 +166,8 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
     tts.cancel()
   }, [tts.cancel])
 
-  const micEnabled = session !== null && !ending && !muted && (voiceView || effective.voiceMode === 'pushToTalk')
+  const micEnabled =
+    session !== null && !ending && !muted && !paused && (voiceView || effective.voiceMode === 'pushToTalk')
   const voice = useVoiceLoop({
     mode: effective.voiceMode,
     enabled: micEnabled,
@@ -248,6 +251,29 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
     void window.api.settings.update({ voiceMode: next })
   }
 
+  /** Freezes the mic and the tutor's voice in place; unlike ending the session, resuming picks up right where it left off. */
+  function togglePause(): void {
+    if (voice.micState === 'capturing') voice.pressEnd()
+    setPaused((p) => {
+      const next = !p
+      if (next) tts.pause()
+      else tts.resume()
+      return next
+    })
+  }
+
+  function togglePinyin(): void {
+    const next = !effective.showPinyin
+    setSettings({ ...effective, showPinyin: next })
+    void window.api.settings.update({ showPinyin: next })
+  }
+
+  function toggleVoiceEnglish(): void {
+    const next = !effective.voiceShowEnglish
+    setSettings({ ...effective, voiceShowEnglish: next })
+    void window.api.settings.update({ voiceShowEnglish: next })
+  }
+
   if (!session || !settings) return <p>Loading session…</p>
 
   const progress = planProgress(session.plan, completedIds)
@@ -263,11 +289,13 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
   const combinedError = error ?? voice.error ?? tts.error
 
   if (voiceView) {
-    const status: VoiceStatus = muted
-      ? 'muted'
-      : voice.micState === 'starting' || voice.micState === 'off'
-        ? 'connecting'
-        : capturing
+    const status: VoiceStatus = paused
+      ? 'paused'
+      : muted
+        ? 'muted'
+        : voice.micState === 'starting' || voice.micState === 'off'
+          ? 'connecting'
+          : capturing
           ? 'capturing'
           : phase === 'transcribing'
             ? 'transcribing'
@@ -293,6 +321,12 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
         onPressStart={voice.pressStart}
         onPressEnd={voice.pressEnd}
         onToggleMute={() => setMuted((m) => !m)}
+        paused={paused}
+        onTogglePause={togglePause}
+        showPinyin={effective.showPinyin}
+        onTogglePinyin={togglePinyin}
+        showEnglish={effective.voiceShowEnglish}
+        onToggleEnglish={toggleVoiceEnglish}
         onShowChat={() => setVoiceView(false)}
         onEnd={handleEndSession}
       />
@@ -398,7 +432,8 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
               <ul>
                 {[...vocabAdded].reverse().map((v, i) => (
                   <li key={i}>
-                    <span className="hanzi-inline">{v.hanzi}</span> {v.pinyin} · {v.english}
+                    <span className="hanzi-inline">{v.hanzi}</span> {effective.showPinyin && `${v.pinyin} · `}
+                    {v.english}
                   </li>
                 ))}
               </ul>

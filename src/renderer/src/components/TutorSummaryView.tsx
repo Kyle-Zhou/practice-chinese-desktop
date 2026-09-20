@@ -8,10 +8,15 @@ interface Props {
 
 export default function TutorSummaryView({ sessionId, onExit }: Props): React.JSX.Element {
   const [session, setSession] = useState<TutorSession | null>(null)
+  const [showPinyin, setShowPinyin] = useState(true)
 
   useEffect(() => {
     window.api.tutor.getSession(sessionId).then(setSession)
   }, [sessionId])
+
+  useEffect(() => {
+    window.api.settings.get().then((s) => setShowPinyin(s.showPinyin))
+  }, [])
 
   if (!session) return <p>Loading…</p>
   const summary = session.summary
@@ -87,7 +92,8 @@ export default function TutorSummaryView({ sessionId, onExit }: Props): React.JS
             <ul className="tutor-vocab-list">
               {summary.vocabAdded.map((v, i) => (
                 <li key={i}>
-                  <span className="hanzi-inline">{v.hanzi}</span> {v.pinyin} · {v.english}
+                  <span className="hanzi-inline">{v.hanzi}</span> {showPinyin && `${v.pinyin} · `}
+                  {v.english}
                 </li>
               ))}
             </ul>

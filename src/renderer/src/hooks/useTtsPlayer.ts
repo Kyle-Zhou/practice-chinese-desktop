@@ -26,6 +26,8 @@ export function useTtsPlayer({ enabled, provider }: Options): {
   error: string | null
   speak: (text: string) => void
   cancel: () => void
+  pause: () => void
+  resume: () => void
 } {
   const [speaking, setSpeaking] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -147,6 +149,17 @@ export function useTtsPlayer({ enabled, provider }: Options): {
     setSpeaking(false)
   }, [])
 
+  /** Suspends playback in place (unlike cancel, nothing already queued is discarded). */
+  const pause = useCallback((): void => {
+    void contextRef.current?.suspend()
+    if ('speechSynthesis' in window) window.speechSynthesis.pause()
+  }, [])
+
+  const resume = useCallback((): void => {
+    void contextRef.current?.resume()
+    if ('speechSynthesis' in window) window.speechSynthesis.resume()
+  }, [])
+
   useEffect(() => {
     return () => {
       cancel()
@@ -154,5 +167,5 @@ export function useTtsPlayer({ enabled, provider }: Options): {
     }
   }, [cancel])
 
-  return { speaking, error, speak, cancel }
+  return { speaking, error, speak, cancel, pause, resume }
 }

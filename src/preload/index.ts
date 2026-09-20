@@ -15,6 +15,7 @@ import type {
   SecretName,
   StartSessionInput,
   SynthesizeResult,
+  TextAnnotation,
   TranscribeResult,
   TutorEvent,
   TutorMessage,
@@ -49,7 +50,8 @@ const api = {
   dictionary: {
     ready: (): Promise<boolean> => ipcRenderer.invoke('dictionary:ready'),
     search: (query: string, limit?: number): Promise<DictionaryEntry[]> =>
-      ipcRenderer.invoke('dictionary:search', query, limit)
+      ipcRenderer.invoke('dictionary:search', query, limit),
+    annotate: (text: string): Promise<TextAnnotation> => ipcRenderer.invoke('dictionary:annotate', text)
   },
   lessons: {
     list: (): Promise<LessonSummary[]> => ipcRenderer.invoke('lessons:list'),

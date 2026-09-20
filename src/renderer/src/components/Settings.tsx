@@ -63,6 +63,18 @@ export default function Settings({ onExit }: Props): React.JSX.Element {
         </button>
       </div>
 
+      <div className="settings-card">
+        <h3>Display</h3>
+        <label className="settings-field settings-field-inline">
+          <input type="checkbox" checked={settings.showPinyin} onChange={(e) => patch({ showPinyin: e.target.checked })} />
+          <span>Show pinyin everywhere</span>
+        </label>
+        <p className="deck-description">
+          Applies to lessons, flashcards, and tutor captions. Turn it off once you want to lean on hanzi and sound
+          instead of the romanization.
+        </p>
+      </div>
+
       {SECRETS.map((secret) => (
         <div key={secret.name} className="settings-card">
           <h3>{secret.title}</h3>

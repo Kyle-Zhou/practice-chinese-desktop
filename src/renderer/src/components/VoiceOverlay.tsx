@@ -1,7 +1,16 @@
 import type { Correction, VoiceMode } from '@shared/types'
 import type { MicState } from '../hooks/useVoiceLoop'
+import { useTextAnnotation } from '../hooks/useTextAnnotation'
 
-export type VoiceStatus = 'connecting' | 'listening' | 'capturing' | 'transcribing' | 'thinking' | 'speaking' | 'muted'
+export type VoiceStatus =
+  | 'connecting'
+  | 'listening'
+  | 'capturing'
+  | 'transcribing'
+  | 'thinking'
+  | 'speaking'
+  | 'muted'
+  | 'paused'
 
 interface Props {
   status: VoiceStatus
@@ -19,6 +28,12 @@ interface Props {
   onPressStart: () => void
   onPressEnd: () => void
   onToggleMute: () => void
+  paused: boolean
+  onTogglePause: () => void
+  showPinyin: boolean
+  onTogglePinyin: () => void
+  showEnglish: boolean
+  onToggleEnglish: () => void
   onShowChat: () => void
   onEnd: () => void
   ending: boolean
@@ -31,7 +46,8 @@ const LABELS: Record<VoiceStatus, string> = {
   transcribing: 'Got it…',
   thinking: 'Thinking…',
   speaking: 'Speaking',
-  muted: 'Muted'
+  muted: 'Muted',
+  paused: 'Paused'
 }
 
 /** The four voice-control icons, drawn to match the app's existing stroke-icon convention
@@ -101,6 +117,23 @@ function KeyboardIcon(): React.JSX.Element {
   )
 }
 
+function PauseIcon(): React.JSX.Element {
+  return (
+    <svg {...iconProps()}>
+      <rect x="6" y="4" width="4" height="16" rx="1" />
+      <rect x="14" y="4" width="4" height="16" rx="1" />
+    </svg>
+  )
+}
+
+function PlayIcon(): React.JSX.Element {
+  return (
+    <svg {...iconProps()}>
+      <path d="M7 4v16l14-8z" />
+    </svg>
+  )
+}
+
 function EndIcon(): React.JSX.Element {
   return (
     <svg {...iconProps()}>
@@ -116,10 +149,24 @@ function EndIcon(): React.JSX.Element {
  * control row without leaving the conversation.
  */
 export default function VoiceOverlay(props: Props): React.JSX.Element {
-  const { status, level, caption, lastUserText, latestCorrection, progress, themeName, error, ending, voiceMode } =
-    props
+  const {
+    status,
+    level,
+    caption,
+    lastUserText,
+    latestCorrection,
+    progress,
+    themeName,
+    error,
+    ending,
+    voiceMode,
+    paused,
+    showPinyin,
+    showEnglish
+  } = props
   const scale = status === 'capturing' ? 1 + level * 0.6 : status === 'speaking' ? 1.08 : 1
   const pushToTalk = voiceMode === 'pushToTalk'
+  const annotation = useTextAnnotation(caption, showPinyin || showEnglish)
 
   // Idle in push-to-talk is "waiting for you to press", not "listening" — the orb shouldn't
   // breathe as though it were already hearing you.
@@ -155,8 +202,30 @@ export default function VoiceOverlay(props: Props): React.JSX.Element {
       </div>
 
       <div className="voice-captions">
+        <div className="voice-caption-toggles">
+          <button
+            type="button"
+            className={`voice-annotation-toggle ${showPinyin ? 'voice-annotation-toggle-active' : ''}`}
+            onClick={props.onTogglePinyin}
+            aria-pressed={showPinyin}
+            title={showPinyin ? 'Hide pinyin' : 'Show pinyin'}
+          >
+            拼音
+          </button>
+          <button
+            type="button"
+            className={`voice-annotation-toggle ${showEnglish ? 'voice-annotation-toggle-active' : ''}`}
+            onClick={props.onToggleEnglish}
+            aria-pressed={showEnglish}
+            title={showEnglish ? 'Hide English' : 'Show English'}
+          >
+            EN
+          </button>
+        </div>
         {lastUserText && <p className="voice-caption-user">{lastUserText}</p>}
         <p className="voice-caption-tutor">{caption || ' '}</p>
+        {showPinyin && annotation.pinyin && <p className="voice-caption-pinyin">{annotation.pinyin}</p>}
+        {showEnglish && annotation.english && <p className="voice-caption-english">{annotation.english}</p>}
         {latestCorrection && (
           <div className="voice-correction">
             <span className="tutor-correction-mistake">✗ {latestCorrection.mistake}</span>
@@ -187,10 +256,19 @@ export default function VoiceOverlay(props: Props): React.JSX.Element {
         <button
           className={`voice-control ${status === 'muted' ? 'voice-control-active' : ''}`}
           onClick={props.onToggleMute}
+          disabled={paused}
           aria-label={status === 'muted' ? 'Unmute microphone' : 'Mute microphone'}
           title={status === 'muted' ? 'Unmute microphone' : 'Mute microphone'}
         >
           {status === 'muted' ? <MicIcon /> : <MicOffIcon />}
+        </button>
+        <button
+          className={`voice-control ${paused ? 'voice-control-active' : ''}`}
+          onClick={props.onTogglePause}
+          aria-label={paused ? 'Resume conversation' : 'Pause conversation'}
+          title={paused ? 'Resume conversation' : 'Pause conversation'}
+        >
+          {paused ? <PlayIcon /> : <PauseIcon />}
         </button>
         <button
           className="voice-control"

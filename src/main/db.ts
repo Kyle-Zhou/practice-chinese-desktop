@@ -4,6 +4,7 @@ import { join } from 'path'
 import { NEW_CARD_STATE, schedule } from '../shared/sm2'
 import { mergeCompleted, planProgress } from '../shared/plan'
 import { normalizePinyin } from '../shared/pinyin'
+import { shortGloss } from '../shared/text'
 import type {
   Card,
   Correction,
@@ -21,6 +22,7 @@ import type {
   PlanCheckpoint,
   Scenario,
   ScenarioKind,
+  TextAnnotation,
   TutorMessage,
   TutorSession,
   TutorSessionSummaryRow,
@@ -803,6 +805,65 @@ export function searchDictionary(query: string, limit = 20): DictionaryEntry[] {
     .sort((a, b) => a.score - b.score || a.order - b.order)
     .slice(0, limit)
     .map((entry) => dictionaryFromRow(entry.row))
+}
+
+/** CC-CEDICT headwords run up to about this many characters (idioms aside); bounds the segmenter's backtracking. */
+const MAX_WORD_LEN = 6
+
+let exactSimplifiedStmt: Database.Statement | null = null
+
+/**
+ * A polyphonic headword has one row per reading (吧: bar/particle/onomatopoeia). CC-CEDICT
+ * lists them in roughly decreasing frequency, which the table preserves as insertion order, so
+ * the lowest id is the best guess at the reading a learner is actually hearing.
+ */
+function lookupExactSimplified(word: string): DictionaryRow | null {
+  exactSimplifiedStmt ??= db.prepare(`${DICTIONARY_SELECT} WHERE simplified = @word ORDER BY id LIMIT 1`)
+  return (exactSimplifiedStmt.get({ word }) as DictionaryRow | undefined) ?? null
+}
+
+/**
+ * Best-effort pinyin + English gloss for arbitrary tutor speech, with no AI call: a greedy
+ * longest-match segmentation against the local CC-CEDICT table (same dictionary the search box
+ * and card lookups use). Good enough for a caption; it has no context to disambiguate rare
+ * polyphonic characters or unseeded words, which just pass through as bare hanzi.
+ */
+export function annotateHanzi(text: string): TextAnnotation {
+  const pinyinParts: string[] = []
+  const englishParts: string[] = []
+  let i = 0
+  while (i < text.length) {
+    const ch = text[i]
+    if (!HAS_HANZI.test(ch)) {
+      pinyinParts.push(ch)
+      i++
+      continue
+    }
+    let matched: DictionaryRow | null = null
+    let matchedLen = 1
+    for (let len = Math.min(MAX_WORD_LEN, text.length - i); len >= 1; len--) {
+      const row = lookupExactSimplified(text.slice(i, i + len))
+      if (row) {
+        matched = row
+        matchedLen = len
+        break
+      }
+    }
+    if (matched) {
+      pinyinParts.push(matched.pinyin)
+      englishParts.push(shortGloss(matched.english, 1))
+    } else {
+      pinyinParts.push(ch)
+    }
+    i += matchedLen
+  }
+  return {
+    pinyin: pinyinParts
+      .join(' ')
+      .replace(/\s*([，。！？、,.!?…])\s*/g, '$1 ')
+      .trim(),
+    english: englishParts.join(' · ')
+  }
 }
 
 // --- Lessons ---
