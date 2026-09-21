@@ -17,6 +17,7 @@ import type {
   LessonStatus,
   LessonSummary,
   LessonWord,
+  LevelWordGroup,
   NewCardInput,
   NewDeckInput,
   PlanCheckpoint,
@@ -939,6 +940,21 @@ export function getLesson(id: string): LessonDetail | null {
     else distractorPool.push(...parsed)
   }
   return { ...summary, words, distractorPool }
+}
+
+/** Every lesson's vocabulary for a level, in lesson order — the source for the "see summary"
+ *  overview linked off each level card. */
+export function getLevelWords(level: number): LevelWordGroup[] {
+  const rows = db.prepare(`SELECT id, name, words FROM lessons WHERE level = ? ORDER BY sort_order ASC`).all(level) as {
+    id: string
+    name: string
+    words: string
+  }[]
+  return rows.map((row) => ({
+    lessonId: row.id,
+    lessonName: row.name,
+    words: JSON.parse(row.words) as LessonWord[]
+  }))
 }
 
 /**

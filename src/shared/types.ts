@@ -305,6 +305,13 @@ export interface LessonDetail extends LessonSummary {
   distractorPool: LessonWord[]
 }
 
+/** One lesson's words, as a group within a level-wide vocabulary summary. */
+export interface LevelWordGroup {
+  lessonId: string
+  lessonName: string
+  words: LessonWord[]
+}
+
 export interface LessonResultInput {
   correct: number
   total: number

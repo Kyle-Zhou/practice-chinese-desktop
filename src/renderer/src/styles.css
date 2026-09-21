@@ -39,12 +39,13 @@
   --yellow: #ffc93c;
   --yellow-press: #f0b71f;
   --yellow-soft: #fff6de;
+  --yellow-ink: #8a6400; /* darkened for legible text on light/soft backgrounds */
 
   /* Right */
-  --green: #58cc02;
+  --green: #9dbf49;
   --green-light: #a7dd57;
   --green-light-press: #97d240;
-  --green-press: #4cb302;
+  --green-press: #78b133;
   --green-soft: #eefade;
   --green-ink: #3b7a0b;
 
@@ -89,6 +90,7 @@
   --fill-press: #34303a;
 
   --yellow-soft: #3a3220;
+  --yellow-ink: #f0c04a;
 
   --green-soft: #1c2e12;
   --green-ink: #9fe066;
@@ -251,6 +253,9 @@ code {
   align-items: center;
   gap: 10px;
   text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 13px;
 }
 
 .app-nav-icon {
@@ -596,6 +601,20 @@ input[type='radio'] {
 .study-done h2 {
   color: var(--ink);
   font-size: 30px;
+}
+
+.error-boundary {
+  max-width: 480px;
+  margin: 72px auto 0;
+  text-align: center;
+}
+
+.error-boundary h2 {
+  margin-bottom: 10px;
+}
+
+.error-boundary .btn {
+  margin-top: 18px;
 }
 
 /* --- Card manager --- */
@@ -1583,29 +1602,56 @@ input[type='radio'] {
 
 /* --- Learn: lesson path --- */
 
+.lesson-path-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lesson-path-header h2 {
+  margin: 0;
+}
+
 .lesson-path-intro {
-  margin: -6px 0 26px;
+  margin: 8px 0 26px;
   color: var(--ink-2);
   max-width: 620px;
 }
 
+/* No border — the fill itself (grey by default, tinted per status) is what tells these
+   cards apart from the page, so there's nothing to outline. */
 .lesson-level-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 18px;
   padding: 20px 22px;
-  background: var(--paper);
-  border: var(--bw) solid var(--line);
+  background: var(--fill);
   border-radius: var(--r-xl);
-  transition: background-color 0.14s ease, border-color 0.14s ease;
+  transition: background-color 0.14s ease;
+}
+
+.lesson-level-main {
+  flex: 1;
+  min-width: 0;
 }
 
 .lesson-level-card--active {
   background: var(--yellow-soft);
-  border-color: var(--yellow);
 }
 
+/* Neutral, not green — the diagonal stripe is what says "done" here, so the fill can stay
+   quiet instead of doubling up on color. */
 .lesson-level-card--completed {
-  background: var(--green-soft);
-  border-color: var(--green-light);
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--fill) 0px,
+    var(--fill) 12px,
+    var(--paper) 12px,
+    var(--paper) 24px
+  );
 }
 
 /* Locked levels are dimmed but still pressable — the escape hatch for anyone who already
@@ -1620,71 +1666,93 @@ input[type='radio'] {
   justify-content: space-between;
   width: 100%;
   gap: 12px;
+  margin-bottom: 10px;
+  color: var(--ink);
+}
+
+.lesson-level-header h3 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.lesson-level-heading-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+/* The subtitle link — its own color so it reads as a separate, secondary action from the
+   title above it, not just smaller text. */
+.lesson-level-subtitle {
+  align-self: flex-start;
   padding: 0;
-  margin-bottom: 8px;
   background: none;
   border: none;
   cursor: pointer;
   font-family: inherit;
-  color: var(--ink);
-  text-align: left;
-}
-
-.lesson-level-heading {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.lesson-level-heading h3 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.lesson-level-status-pill {
-  padding: 3px 10px;
-  background: var(--fill);
-  border-radius: var(--r-pill);
-  font-size: 11.5px;
-  font-weight: 750;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--ink-2);
-}
-
-.lesson-level-card--completed .lesson-level-status-pill {
-  background: var(--paper);
-  color: var(--green-ink);
-}
-
-.lesson-level-header-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-.lesson-level-count {
-  color: var(--ink-3);
-  font-size: 13.5px;
+  font-size: 12.5px;
   font-weight: 650;
-  white-space: nowrap;
+  color: var(--yellow-ink);
 }
 
+.lesson-level-subtitle:hover {
+  text-decoration: underline;
+}
+
+/* Only this small icon button opens the section — the row it sits in (title, bubble,
+   progress) is just content, not one giant click target. */
+.lesson-level-chevron-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  margin: -6px;
+  background: none;
+  border: none;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.14s ease;
+}
+
+.lesson-level-chevron-btn:hover {
+  background: var(--fill);
+}
+
+/* Points right — "go to this section" rather than "expand this section". */
 .lesson-level-chevron {
   display: flex;
   color: var(--ink-3);
-  transition: transform 0.18s ease;
+  transform: rotate(-90deg);
 }
 
-.lesson-level-chevron-open {
-  transform: rotate(180deg);
+.lesson-level-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.lesson-level-status-row--completed {
+  color: var(--green-ink);
+}
+
+.lesson-level-status-row--locked {
+  color: var(--ink-3);
+  font-weight: 650;
+}
+
+.lesson-level-review {
+  flex-shrink: 0;
 }
 
 .lesson-level-bar {
-  height: 10px;
+  position: relative;
+  height: 20px;
+  margin-bottom: 14px;
   background: var(--paper);
-  border: var(--bw) solid var(--line);
   border-radius: var(--r-pill);
   overflow: hidden;
 }
@@ -1699,16 +1767,15 @@ input[type='radio'] {
   transition: transform 0.3s ease;
 }
 
-.lesson-level-body {
-  margin-top: 16px;
-}
-
-.lesson-level-frontier {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
+.lesson-level-pct {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-weight: 750;
+  color: var(--ink-solid);
+  white-space: nowrap;
 }
 
 .lesson-preview-bubble {
@@ -1717,7 +1784,6 @@ input[type='radio'] {
   gap: 2px;
   padding: 10px 14px;
   background: var(--paper);
-  border: var(--bw) solid var(--line);
   border-radius: var(--r-lg);
 }
 
@@ -1739,33 +1805,87 @@ input[type='radio'] {
 
 .lesson-level-cta {
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* --- Learn: level detail banner + step path --- */
+
+.lesson-level-banner {
+  padding: 18px 22px 22px;
+  margin-bottom: 24px;
+  border-radius: var(--r-xl);
+  background: var(--fill);
+}
+
+.lesson-level-banner--active {
+  background: var(--yellow);
+  color: var(--ink-solid);
+}
+
+.lesson-level-banner--completed {
+  background: var(--green-soft);
+}
+
+.lesson-level-banner-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  margin-bottom: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 750;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: inherit;
+  opacity: 0.75;
+}
+
+.lesson-level-banner-back svg {
+  transform: rotate(90deg);
+}
+
+.lesson-level-banner-title {
+  margin: 0;
+  font-size: 24px;
 }
 
 .lesson-steps {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .lesson-step {
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: transform 0.18s ease;
 }
 
-.lesson-step:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  left: 23px;
-  top: 38px;
-  bottom: -4px;
-  width: 2px;
-  background: var(--line);
+/* A gentle left-right wave down the page, evoking a winding path without swinging the text
+   labels far enough to clip against the card edges. */
+.lesson-step:nth-child(4n + 2) {
+  transform: translateX(28px);
+}
+
+.lesson-step:nth-child(4n + 4) {
+  transform: translateX(-28px);
 }
 
 .lesson-step-btn {
   display: flex;
   align-items: center;
   gap: 12px;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   text-align: left;
   padding: 8px 10px 8px 4px;
   background: none;
@@ -1785,32 +1905,23 @@ input[type='radio'] {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   flex-shrink: 0;
-  background: var(--paper);
-  border: var(--bw) solid var(--line);
+  background: var(--fill);
   border-radius: 50%;
   color: var(--ink-3);
-  position: relative;
-  z-index: 1;
+  transition: width 0.18s ease, height 0.18s ease, background-color 0.18s ease;
 }
 
 .lesson-step-completed .lesson-step-marker {
   background: var(--green);
-  border-color: var(--green);
   color: var(--ink-solid);
-}
-
-.lesson-step-in_progress .lesson-step-btn,
-.lesson-step-available .lesson-step-btn {
-  background: var(--yellow-soft);
 }
 
 .lesson-step-in_progress .lesson-step-marker,
 .lesson-step-available .lesson-step-marker {
   background: var(--yellow);
-  border-color: var(--yellow);
   color: var(--ink-solid);
 }
 
@@ -1819,16 +1930,78 @@ input[type='radio'] {
 }
 
 .lesson-step-name {
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 700;
 }
 
-.lesson-step-meta {
-  margin-left: auto;
-  font-size: 12px;
+/* The one node you can actually act on — just bigger, no ring. */
+.lesson-step-current .lesson-step-marker {
+  width: 42px;
+  height: 42px;
+}
+
+.lesson-step-current .lesson-step-name {
+  font-size: 16px;
+}
+
+/* --- Learn: level word summary --- */
+
+.lesson-summary-group {
+  margin-bottom: 28px;
+}
+
+.lesson-summary-group h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.lesson-summary-group-count {
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--ink-3);
-  white-space: nowrap;
+}
+
+.lesson-summary-word-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--fill);
+}
+
+.lesson-summary-word {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 10px 16px;
+}
+
+.lesson-summary-word:nth-child(even) {
+  background: var(--paper);
+}
+
+.lesson-summary-word-hanzi {
+  font-size: 16px;
+  font-weight: 750;
+  min-width: 90px;
+}
+
+.lesson-summary-word-pinyin {
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--ink-3);
+  min-width: 110px;
+}
+
+.lesson-summary-word-english {
+  font-size: 13px;
+  color: var(--ink-2);
+  flex: 1;
+  min-width: 0;
 }
 
 /* --- Learn: lesson --- */

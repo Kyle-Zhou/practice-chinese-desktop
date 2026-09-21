@@ -37,6 +37,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('lessons:list', () => db.listLessons())
   ipcMain.handle('lessons:get', (_e, id: string) => db.getLesson(id))
+  ipcMain.handle('lessons:levelWords', (_e, level: number) => db.getLevelWords(level))
   ipcMain.handle('lessons:start', (_e, id: string) => db.markLessonStarted(id))
   ipcMain.handle('lessons:complete', (_e, id: string, result: LessonResultInput) =>
     lessons.completeLesson(id, result)
