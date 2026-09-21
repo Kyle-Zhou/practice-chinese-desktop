@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTheme } from './hooks/useTheme'
+import ErrorBoundary from './components/ErrorBoundary'
 import Home from './components/Home'
 import DeckList from './components/DeckList'
 import StudySession from './components/StudySession'
@@ -87,58 +88,59 @@ export default function App(): React.JSX.Element {
         </aside>
 
         <main className={`app-main ${view.name === 'tutorChat' ? 'app-main-wide' : ''}`}>
-          {view.name === 'home' && (
-            <Home
-              onStudyAll={() => setView({ name: 'study', deckId: null })}
-              onOpenLesson={(lessonId) => setView({ name: 'lesson', lessonId })}
-              onGoLearn={() => setView({ name: 'lessons' })}
-              onOpenTutor={() => setView({ name: 'tutorPicker' })}
-              onResumeTutor={(sessionId) => setView({ name: 'tutorChat', sessionId })}
-            />
-          )}
-          {view.name === 'decks' && (
-            <DeckList
-              onStudy={(deckId) => setView({ name: 'study', deckId })}
-              onManage={(deckId) => setView({ name: 'manage', deckId })}
-              onLearn={() => setView({ name: 'lessons' })}
-            />
-          )}
-          {view.name === 'study' && <StudySession deckId={view.deckId} onExit={() => setView({ name: 'decks' })} />}
-          {view.name === 'manage' && <DeckManager deckId={view.deckId} onExit={() => setView({ name: 'decks' })} />}
-          {view.name === 'lessons' && (
-            <LessonPath
-              onOpenLesson={(lessonId) => setView({ name: 'lesson', lessonId })}
-              onExit={() => setView({ name: 'decks' })}
-            />
-          )}
-          {view.name === 'lesson' && (
-            <LessonView
-              lessonId={view.lessonId}
-              onExit={() => setView({ name: 'lessons' })}
-              onStudy={(deckId) => setView({ name: 'study', deckId })}
-            />
-          )}
-          {view.name === 'settings' && (
-            <Settings onExit={() => setView({ name: 'decks' })} theme={theme} onThemeChange={setTheme} />
-          )}
-          {view.name === 'tutorPicker' && (
-            <TutorScenarioPicker
-              onExit={() => setView({ name: 'decks' })}
-              onOpenSession={(sessionId) => setView({ name: 'tutorChat', sessionId })}
-              onViewSummary={(sessionId) => setView({ name: 'tutorSummary', sessionId })}
-              onOpenSettings={() => setView({ name: 'settings' })}
-            />
-          )}
-          {view.name === 'tutorChat' && (
-            <TutorChat
-              sessionId={view.sessionId}
-              onExit={() => setView({ name: 'tutorPicker' })}
-              onComplete={(sessionId) => setView({ name: 'tutorSummary', sessionId })}
-            />
-          )}
-          {view.name === 'tutorSummary' && (
-            <TutorSummaryView sessionId={view.sessionId} onExit={() => setView({ name: 'tutorPicker' })} />
-          )}
+          <ErrorBoundary onReset={() => setView({ name: 'home' })}>
+            {view.name === 'home' && (
+              <Home
+                onStudyAll={() => setView({ name: 'study', deckId: null })}
+                onOpenLesson={(lessonId) => setView({ name: 'lesson', lessonId })}
+                onGoLearn={() => setView({ name: 'lessons' })}
+                onOpenTutor={() => setView({ name: 'tutorPicker' })}
+                onResumeTutor={(sessionId) => setView({ name: 'tutorChat', sessionId })}
+              />
+            )}
+            {view.name === 'decks' && (
+              <DeckList
+                onStudy={(deckId) => setView({ name: 'study', deckId })}
+                onManage={(deckId) => setView({ name: 'manage', deckId })}
+                onLearn={() => setView({ name: 'lessons' })}
+              />
+            )}
+            {view.name === 'study' && <StudySession deckId={view.deckId} onExit={() => setView({ name: 'decks' })} />}
+            {view.name === 'manage' && (
+              <DeckManager deckId={view.deckId} onExit={() => setView({ name: 'decks' })} />
+            )}
+            {view.name === 'lessons' && (
+              <LessonPath onOpenLesson={(lessonId) => setView({ name: 'lesson', lessonId })} />
+            )}
+            {view.name === 'lesson' && (
+              <LessonView
+                lessonId={view.lessonId}
+                onExit={() => setView({ name: 'lessons' })}
+                onStudy={(deckId) => setView({ name: 'study', deckId })}
+              />
+            )}
+            {view.name === 'settings' && (
+              <Settings onExit={() => setView({ name: 'decks' })} theme={theme} onThemeChange={setTheme} />
+            )}
+            {view.name === 'tutorPicker' && (
+              <TutorScenarioPicker
+                onExit={() => setView({ name: 'decks' })}
+                onOpenSession={(sessionId) => setView({ name: 'tutorChat', sessionId })}
+                onViewSummary={(sessionId) => setView({ name: 'tutorSummary', sessionId })}
+                onOpenSettings={() => setView({ name: 'settings' })}
+              />
+            )}
+            {view.name === 'tutorChat' && (
+              <TutorChat
+                sessionId={view.sessionId}
+                onExit={() => setView({ name: 'tutorPicker' })}
+                onComplete={(sessionId) => setView({ name: 'tutorSummary', sessionId })}
+              />
+            )}
+            {view.name === 'tutorSummary' && (
+              <TutorSummaryView sessionId={view.sessionId} onExit={() => setView({ name: 'tutorPicker' })} />
+            )}
+          </ErrorBoundary>
         </main>
       </div>
     </div>

@@ -1,45 +1,31 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { LessonSummary } from '@shared/types'
+import { useEffect, useMemo, useState } from 'react'
+import type { LessonSummary, LevelWordGroup } from '@shared/types'
 
 interface Props {
   onOpenLesson: (lessonId: string) => void
-  onExit: () => void
 }
 
 type LevelStatus = 'completed' | 'active' | 'locked'
 
-const LEVEL_STATUS_LABEL: Record<LevelStatus, string> = {
-  completed: 'Completed',
-  active: 'In progress',
-  locked: 'Locked'
-}
-
-const STEP_META: Record<LessonSummary['status'], (lesson: LessonSummary) => string> = {
-  completed: (lesson) => (lesson.total ? `${lesson.correct}/${lesson.total} correct` : `${lesson.wordCount} words`),
-  in_progress: (lesson) => `${lesson.wordCount} words · in progress`,
-  available: (lesson) => `${lesson.wordCount} words`,
-  locked: (lesson) => `${lesson.wordCount} words`
-}
-
-function CheckIcon(): React.JSX.Element {
+function CheckIcon({ size = 14 }: { size?: number }): React.JSX.Element {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M20 6 9 17l-5-5" />
     </svg>
   )
 }
 
-function PlayIcon(): React.JSX.Element {
+function PlayIcon({ size = 12 }: { size?: number }): React.JSX.Element {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <path d="M6 4.5v15l13-7.5z" />
     </svg>
   )
 }
 
-function LockIcon(): React.JSX.Element {
+function LockIcon({ size = 13 }: { size?: number }): React.JSX.Element {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="5" y="11" width="14" height="10" rx="2" />
       <path d="M8 11V7a4 4 0 0 1 8 0v4" />
     </svg>
@@ -60,16 +46,110 @@ function StepMarker({ status }: { status: LessonSummary['status'] }): React.JSX.
   return <PlayIcon />
 }
 
-export default function LessonPath({ onOpenLesson, onExit }: Props): React.JSX.Element {
+interface LevelGroup {
+  level: number
+  group: LessonSummary[]
+  done: number
+  total: number
+  frontier: LessonSummary | undefined
+  status: LevelStatus
+}
+
+function LevelCard({
+  level,
+  group,
+  done,
+  total,
+  frontier,
+  status,
+  onOpenDetail,
+  onOpenSummary
+}: LevelGroup & { onOpenDetail: () => void; onOpenSummary: () => void }): React.JSX.Element {
+  const ctaLabel = frontier?.status === 'in_progress' ? 'Continue' : 'Start lesson'
+  const pct = total ? Math.round((done / total) * 100) : 0
+  const totalWords = group.reduce((sum, lesson) => sum + lesson.wordCount, 0)
+
+  return (
+    <div className={`lesson-level-card lesson-level-card--${status}`}>
+      <div className="lesson-level-main">
+        <div className="lesson-level-header">
+          <div className="lesson-level-heading-group">
+            <h3>HSK {level}</h3>
+            <button className="lesson-level-subtitle" onClick={onOpenSummary}>
+              {totalWords} words · See summary
+            </button>
+          </div>
+          <button className="lesson-level-chevron-btn" onClick={onOpenDetail} aria-label={`View HSK ${level} lessons`}>
+            <span className="lesson-level-chevron">
+              <ChevronIcon />
+            </span>
+          </button>
+        </div>
+
+        {status === 'completed' && (
+          <div className="lesson-level-status-row lesson-level-status-row--completed">
+            <CheckIcon /> Completed!
+          </div>
+        )}
+
+        {status === 'active' && (
+          <>
+            <div className="lesson-level-bar">
+              <div className="lesson-level-fill" style={{ '--progress': pct / 100 } as React.CSSProperties} />
+              <span className="lesson-level-pct">{pct}%</span>
+            </div>
+            {frontier && (
+              <button className="btn btn-primary lesson-level-cta" onClick={onOpenDetail}>
+                {frontier.status === 'in_progress' ? ctaLabel : `${ctaLabel} · ${frontier.name.replace(/^HSK \d+ · /, '')}`}
+              </button>
+            )}
+          </>
+        )}
+
+        {status === 'locked' && (
+          <div className="lesson-level-status-row lesson-level-status-row--locked">
+            <LockIcon /> {total} lessons locked
+          </div>
+        )}
+      </div>
+
+      {status === 'completed' && (
+        <button className="btn lesson-level-review" onClick={onOpenDetail}>
+          Review
+        </button>
+      )}
+    </div>
+  )
+}
+
+export default function LessonPath({ onOpenLesson }: Props): React.JSX.Element {
   const [lessons, setLessons] = useState<LessonSummary[] | null>(null)
-  const [expanded, setExpanded] = useState<Set<number>>(new Set())
-  const didInitExpanded = useRef(false)
+  const [openLevel, setOpenLevel] = useState<number | null>(null)
+  const [summaryLevel, setSummaryLevel] = useState<number | null>(null)
+  const [summaryWords, setSummaryWords] = useState<LevelWordGroup[] | null>(null)
+  const [summaryError, setSummaryError] = useState(false)
 
   useEffect(() => {
     window.api.lessons.list().then(setLessons)
   }, [])
 
-  const levels = useMemo(() => {
+  useEffect(() => {
+    if (summaryLevel === null) {
+      setSummaryWords(null)
+      setSummaryError(false)
+      return
+    }
+    setSummaryError(false)
+    Promise.resolve()
+      .then(() => window.api.lessons.levelWords(summaryLevel))
+      .then(setSummaryWords)
+      .catch((err) => {
+        console.error('Failed to load level word summary:', err)
+        setSummaryError(true)
+      })
+  }, [summaryLevel])
+
+  const levels = useMemo<LevelGroup[]>(() => {
     if (!lessons) return []
     const numbers = [...new Set(lessons.map((lesson) => lesson.level))].sort((a, b) => a - b)
     return numbers.map((level) => {
@@ -81,111 +161,104 @@ export default function LessonPath({ onOpenLesson, onExit }: Props): React.JSX.E
     })
   }, [lessons])
 
-  // Default open state: the one level with the learning frontier, so the page lands on
-  // "what's next" rather than a wall of collapsed cards. Runs once, so collapsing it back
-  // manually doesn't get overridden on the next render.
-  useEffect(() => {
-    if (didInitExpanded.current || levels.length === 0) return
-    didInitExpanded.current = true
-    const activeLevel = levels.find((l) => l.status === 'active')
-    if (activeLevel) setExpanded(new Set([activeLevel.level]))
-  }, [levels])
+  if (lessons === null) return <p>Loading lessons…</p>
 
-  function toggle(level: number): void {
-    setExpanded((prev) => {
-      const next = new Set(prev)
-      if (next.has(level)) next.delete(level)
-      else next.add(level)
-      return next
-    })
+  if (summaryLevel !== null) {
+    return (
+      <div className="lesson-path">
+        <button className="lesson-level-banner-back" onClick={() => setSummaryLevel(null)}>
+          <ChevronIcon />
+          HSK {summaryLevel}
+        </button>
+        <h2>HSK {summaryLevel} word summary</h2>
+        <p className="lesson-path-intro">Every word taught across all of HSK {summaryLevel}, lesson by lesson.</p>
+
+        {summaryError ? (
+          <p className="deck-description">
+            Couldn't load the word summary. If the app was already open, try restarting it — the summary view needs
+            a fresh app restart to pick up.
+          </p>
+        ) : summaryWords === null ? (
+          <p>Loading…</p>
+        ) : (
+          summaryWords.map((group) => (
+            <section key={group.lessonId} className="lesson-summary-group">
+              <h3>
+                {group.lessonName.replace(/^HSK \d+ · /, '')}
+                <span className="lesson-summary-group-count">{group.words.length} words</span>
+              </h3>
+              <ul className="lesson-summary-word-list">
+                {group.words.map((word, i) => (
+                  <li key={i} className="lesson-summary-word">
+                    <span className="lesson-summary-word-hanzi">{word.hanzi}</span>
+                    <span className="lesson-summary-word-pinyin">{word.pinyin}</span>
+                    <span className="lesson-summary-word-english">{word.english}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))
+        )}
+      </div>
+    )
   }
 
-  if (lessons === null) return <p>Loading lessons…</p>
+  const openLevelGroup = openLevel === null ? null : levels.find((l) => l.level === openLevel) ?? null
+
+  if (openLevelGroup) {
+    const { level, group, frontier, status } = openLevelGroup
+    const bannerTitle = frontier ? frontier.name.replace(/^HSK \d+ · /, '') : `HSK ${level} review`
+
+    return (
+      <div className="lesson-path">
+        <div className={`lesson-level-banner lesson-level-banner--${status}`}>
+          <button className="lesson-level-banner-back" onClick={() => setOpenLevel(null)}>
+            <ChevronIcon />
+            HSK {level}
+          </button>
+          <h2 className="lesson-level-banner-title">{bannerTitle}</h2>
+        </div>
+
+        <ul className="lesson-steps">
+          {group.map((lesson) => {
+            const isCurrent = lesson.id === frontier?.id
+            return (
+              <li key={lesson.id} className={`lesson-step lesson-step-${lesson.status} ${isCurrent ? 'lesson-step-current' : ''}`}>
+                <button className="lesson-step-btn" onClick={() => onOpenLesson(lesson.id)}>
+                  <span className="lesson-step-marker">
+                    <StepMarker status={lesson.status} />
+                  </span>
+                  <span className="lesson-step-name">{lesson.name.replace(/^HSK \d+ · /, '')}</span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+    )
+  }
 
   return (
     <div className="lesson-path">
-      <div className="study-toolbar">
-        <button className="btn" onClick={onExit}>
-          ← Back to decks
-        </button>
+      <div className="lesson-path-header">
+        <h2>Learn</h2>
         <span className="study-remaining">
           {lessons.filter((lesson) => lesson.status === 'completed').length} / {lessons.length} lessons done
         </span>
       </div>
-
-      <h2>Learn</h2>
       <p className="lesson-path-intro">
         Each lesson introduces a handful of words with example sentences, then quizzes you on them. Finishing a lesson
         files its words into your <strong>My Words</strong> deck, where they come back for review.
       </p>
 
-      {levels.map(({ level, group, done, total, frontier, status }) => {
-        const isOpen = expanded.has(level)
-        const ctaLabel = frontier?.status === 'in_progress' ? 'Continue lesson' : 'Start lesson'
-
-        return (
-          <section key={level} className={`lesson-level-card lesson-level-card--${status}`}>
-            <button
-              className="lesson-level-header"
-              onClick={() => toggle(level)}
-              aria-expanded={isOpen}
-            >
-              <span className="lesson-level-heading">
-                <h3>HSK {level}</h3>
-                <span className="lesson-level-status-pill">{LEVEL_STATUS_LABEL[status]}</span>
-              </span>
-              <span className="lesson-level-header-right">
-                <span className="lesson-level-count">
-                  {done} / {total} lessons
-                </span>
-                <span className={`lesson-level-chevron ${isOpen ? 'lesson-level-chevron-open' : ''}`}>
-                  <ChevronIcon />
-                </span>
-              </span>
-            </button>
-
-            <div className="lesson-level-bar">
-              <div
-                className="lesson-level-fill"
-                style={{ '--progress': total ? done / total : 0 } as React.CSSProperties}
-              />
-            </div>
-
-            {isOpen && (
-              <div className="lesson-level-body">
-                {frontier && (
-                  <div className="lesson-level-frontier">
-                    {frontier.previewExample && (
-                      <div className="lesson-preview-bubble">
-                        <span className="lesson-preview-pinyin">{frontier.previewExample.pinyin}</span>
-                        <span className="lesson-preview-hanzi">{frontier.previewExample.hanzi}</span>
-                        <span className="lesson-preview-english">{frontier.previewExample.english}</span>
-                      </div>
-                    )}
-                    <button className="btn btn-primary lesson-level-cta" onClick={() => onOpenLesson(frontier.id)}>
-                      {ctaLabel} · {frontier.name.replace(/^HSK \d+ · /, '')}
-                    </button>
-                  </div>
-                )}
-
-                <ul className="lesson-steps">
-                  {group.map((lesson) => (
-                    <li key={lesson.id} className={`lesson-step lesson-step-${lesson.status}`}>
-                      <button className="lesson-step-btn" onClick={() => onOpenLesson(lesson.id)}>
-                        <span className="lesson-step-marker">
-                          <StepMarker status={lesson.status} />
-                        </span>
-                        <span className="lesson-step-name">{lesson.name.replace(/^HSK \d+ · /, '')}</span>
-                        <span className="lesson-step-meta">{STEP_META[lesson.status](lesson)}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </section>
-        )
-      })}
+      {levels.map((levelGroup) => (
+        <LevelCard
+          key={levelGroup.level}
+          {...levelGroup}
+          onOpenDetail={() => setOpenLevel(levelGroup.level)}
+          onOpenSummary={() => setSummaryLevel(levelGroup.level)}
+        />
+      ))}
     </div>
   )
 }

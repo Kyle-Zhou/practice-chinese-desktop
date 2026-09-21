@@ -9,6 +9,7 @@ import type {
   LessonDetail,
   LessonResultInput,
   LessonSummary,
+  LevelWordGroup,
   NewCardInput,
   NewDeckInput,
   Scenario,
@@ -56,6 +57,7 @@ const api = {
   lessons: {
     list: (): Promise<LessonSummary[]> => ipcRenderer.invoke('lessons:list'),
     get: (id: string): Promise<LessonDetail | null> => ipcRenderer.invoke('lessons:get', id),
+    levelWords: (level: number): Promise<LevelWordGroup[]> => ipcRenderer.invoke('lessons:levelWords', level),
     start: (id: string): Promise<void> => ipcRenderer.invoke('lessons:start', id),
     complete: (id: string, result: LessonResultInput): Promise<LessonCompletion> =>
       ipcRenderer.invoke('lessons:complete', id, result)
