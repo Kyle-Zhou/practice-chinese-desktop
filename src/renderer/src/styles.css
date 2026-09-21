@@ -1622,15 +1622,31 @@ input[type='radio'] {
 /* No border — the fill itself (grey by default, tinted per status) is what tells these
    cards apart from the page, so there's nothing to outline. */
 .lesson-level-card {
+  position: relative;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 18px;
-  padding: 20px 22px;
+  margin-bottom: 30px;
+  padding: 28px 22px;
   background: var(--fill);
   border-radius: var(--r-xl);
   transition: background-color 0.14s ease;
+}
+
+/* The mascot bleeds past the card's own bottom edge, Duolingo-style, so it reads as a
+   character standing in front of the card rather than an image boxed inside it. Sized by
+   height (not width) so the different poses read as roughly the same visual weight despite
+   having different aspect ratios. */
+.lesson-level-mascot {
+  position: absolute;
+  right: 18px;
+  bottom: -20px;
+  width: auto;
+  height: 118px;
+  flex-shrink: 0;
+  pointer-events: none;
+  user-select: none;
 }
 
 .lesson-level-main {
@@ -1639,6 +1655,7 @@ input[type='radio'] {
 }
 
 .lesson-level-card--active {
+  padding-right: 160px;
   background: var(--yellow-soft);
 }
 

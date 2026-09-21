@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { LessonSummary, LevelWordGroup } from '@shared/types'
+import mascotHorseStudy from '../assets/mascot-horse-study.png'
+import mascotHorsePractice from '../assets/mascot-horse-practice.png'
+import mascotHorseImprove from '../assets/mascot-horse-improve.png'
+
+// Cycled by level number so that when more than one level is active at once, they don't all
+// show the same pose.
+const ACTIVE_MASCOTS = [mascotHorseStudy, mascotHorsePractice, mascotHorseImprove]
 
 interface Props {
   onOpenLesson: (lessonId: string) => void
@@ -117,6 +124,14 @@ function LevelCard({
         <button className="btn lesson-level-review" onClick={onOpenDetail}>
           Review
         </button>
+      )}
+
+      {status === 'active' && (
+        <img
+          src={ACTIVE_MASCOTS[level % ACTIVE_MASCOTS.length]}
+          alt=""
+          className="lesson-level-mascot"
+        />
       )}
     </div>
   )
