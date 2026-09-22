@@ -23,6 +23,7 @@ import type {
   PlanCheckpoint,
   Scenario,
   ScenarioKind,
+  StreakInfo,
   TextAnnotation,
   TutorMessage,
   TutorSession,
@@ -985,4 +986,53 @@ export function markLessonCompleted(id: string, correct: number, total: number):
 /** True if this specific deck already has a card for the hanzi. */
 export function cardExistsInDeck(deckId: number, hanzi: string): boolean {
   return db.prepare(`SELECT 1 FROM cards WHERE deck_id = ? AND hanzi = ? LIMIT 1`).get(deckId, hanzi) !== undefined
+}
+
+// --- Streak ---
+
+function localDateKey(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+/**
+ * A day counts as "active" if the learner touched any of the three study surfaces — reviews,
+ * lessons, or the tutor. Timestamps are stored as UTC ISO strings, so `date(..., 'localtime')`
+ * converts each one to the machine's local calendar day before it's compared.
+ */
+export function getStreak(): StreakInfo {
+  const rows = db
+    .prepare(
+      `SELECT DISTINCT date(activity_at, 'localtime') AS day FROM (
+         SELECT reviewed_at AS activity_at FROM review_log
+         UNION ALL
+         SELECT started_at FROM lesson_progress
+         UNION ALL
+         SELECT completed_at FROM lesson_progress WHERE completed_at IS NOT NULL
+         UNION ALL
+         SELECT created_at FROM tutor_sessions
+         UNION ALL
+         SELECT updated_at FROM tutor_sessions
+       )`
+    )
+    .all() as { day: string }[]
+  const activeDays = new Set(rows.map((r) => r.day))
+
+  const today = new Date()
+  const activeToday = activeDays.has(localDateKey(today))
+
+  // If today has no activity yet, the streak is still "alive" as long as yesterday was active —
+  // it just hasn't been extended today. Counting starts from there instead.
+  const cursor = new Date(today)
+  if (!activeToday) cursor.setDate(cursor.getDate() - 1)
+
+  let current = 0
+  while (activeDays.has(localDateKey(cursor))) {
+    current++
+    cursor.setDate(cursor.getDate() - 1)
+  }
+
+  return { current, activeToday }
 }

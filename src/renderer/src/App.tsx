@@ -8,6 +8,7 @@ import DeckManager from './components/DeckManager'
 import LessonPath from './components/LessonPath'
 import LessonView from './components/LessonView'
 import Settings from './components/Settings'
+import StreakBadge from './components/StreakBadge'
 import TutorScenarioPicker from './components/TutorScenarioPicker'
 import TutorChat from './components/TutorChat'
 import TutorSummaryView from './components/TutorSummaryView'
@@ -142,6 +143,12 @@ export default function App(): React.JSX.Element {
             )}
           </ErrorBoundary>
         </main>
+
+        {section !== 'settings' && (
+          <aside className="app-right">
+            <StreakBadge refreshOn={JSON.stringify(view)} />
+          </aside>
+        )}
       </div>
     </div>
   )

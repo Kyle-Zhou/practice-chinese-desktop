@@ -325,3 +325,9 @@ export interface LessonCompletion {
   deckId: number
   deckName: string
 }
+
+export interface StreakInfo {
+  /** Consecutive active days counting back from today (or yesterday, if today is not active yet). */
+  current: number
+  activeToday: boolean
+}

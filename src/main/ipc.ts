@@ -21,6 +21,8 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('decks:delete', (_e, id: number) => db.deleteDeck(id))
   ipcMain.handle('decks:allDueCount', () => db.getAllDueCount())
 
+  ipcMain.handle('progress:streak', () => db.getStreak())
+
   ipcMain.handle('cards:listForDeck', (_e, deckId: number) => db.getCardsForDeck(deckId))
   ipcMain.handle('cards:add', (_e, input: NewCardInput) => db.addCard(input))
   ipcMain.handle('cards:update', (_e, id: number, fields: Parameters<typeof db.updateCard>[1]) =>
