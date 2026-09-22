@@ -242,7 +242,7 @@ code {
 .app-nav-rail {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 16px;
 }
 
 /* Nav items are ordinary .btn pills stretched full width and left-aligned so they read as a
@@ -265,6 +265,47 @@ code {
 /* Pins Settings to the foot of the rail, matching the reference layout. */
 .app-nav-bottom {
   margin-top: auto;
+}
+
+/* --- Shell: right column ---
+   Mirrors the left rail's geometry but stays mounted across every tab switch (it lives outside
+   the view switch in App.tsx), so it reads as a fixed frame around the content rather than part
+   of any one page. Hidden only on Settings, where a distraction-free page is the point. */
+
+.app-right {
+  flex-shrink: 0;
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 20px 16px;
+  background: var(--paper);
+}
+
+.streak-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--r-pill);
+  background: var(--fill);
+  color: var(--ink-3);
+}
+
+.streak-badge-icon {
+  flex-shrink: 0;
+}
+
+/* Lit up only once today's activity has actually happened — an unlit flame is the nudge to go
+   study, not a false "you're on track". */
+.streak-badge-active {
+  background: var(--yellow-soft);
+  color: var(--yellow-ink);
+}
+
+.streak-badge-count {
+  font-size: 15px;
+  font-weight: 800;
 }
 
 /* --- Buttons ---
@@ -331,6 +372,16 @@ code {
 .btn-toggle-on:hover:not(:disabled) {
   background: var(--yellow);
   color: var(--ink-solid);
+}
+
+/* Nav items carry a pill only when active; at rest — and even on hover — they stay plain, so
+   the rail reads as a list of labels with one lit tab rather than a stack of buttons. */
+.app-nav-item:not(.btn-toggle-on) {
+  background: transparent;
+}
+
+.app-nav-item:not(.btn-toggle-on):hover:not(:disabled) {
+  background: var(--fill);
 }
 
 /* --- Inputs --- */

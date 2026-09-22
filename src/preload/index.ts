@@ -15,6 +15,7 @@ import type {
   Scenario,
   SecretName,
   StartSessionInput,
+  StreakInfo,
   SynthesizeResult,
   TextAnnotation,
   TranscribeResult,
@@ -32,6 +33,9 @@ const api = {
     create: (input: NewDeckInput): Promise<Deck> => ipcRenderer.invoke('decks:create', input),
     delete: (id: number): Promise<void> => ipcRenderer.invoke('decks:delete', id),
     allDueCount: (): Promise<number> => ipcRenderer.invoke('decks:allDueCount')
+  },
+  progress: {
+    streak: (): Promise<StreakInfo> => ipcRenderer.invoke('progress:streak')
   },
   cards: {
     listForDeck: (deckId: number): Promise<Card[]> => ipcRenderer.invoke('cards:listForDeck', deckId),
