@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useTheme } from './hooks/useTheme'
 import ErrorBoundary from './components/ErrorBoundary'
-import Home from './components/Home'
 import DeckList from './components/DeckList'
 import StudySession from './components/StudySession'
 import DeckManager from './components/DeckManager'
@@ -17,7 +16,6 @@ import navIconDecks from './assets/nav-icon-decks.png'
 import navIconTutor from './assets/nav-icon-tutor.png'
 
 type View =
-  | { name: 'home' }
   | { name: 'decks' }
   | { name: 'study'; deckId: number | null }
   | { name: 'manage'; deckId: number }
@@ -29,18 +27,17 @@ type View =
   | { name: 'tutorSummary'; sessionId: number }
 
 /** Top-level section a view belongs to, so drill-down views keep their sidebar item highlighted. */
-type Section = 'home' | 'lessons' | 'decks' | 'tutor' | 'settings'
+type Section = 'lessons' | 'decks' | 'tutor' | 'settings'
 
 function sectionForView(name: View['name']): Section {
-  if (name === 'lessons' || name === 'lesson') return 'lessons'
   if (name === 'decks' || name === 'study' || name === 'manage') return 'decks'
   if (name === 'tutorPicker' || name === 'tutorChat' || name === 'tutorSummary') return 'tutor'
   if (name === 'settings') return 'settings'
-  return 'home'
+  return 'lessons'
 }
 
 export default function App(): React.JSX.Element {
-  const [view, setView] = useState<View>({ name: 'home' })
+  const [view, setView] = useState<View>({ name: 'lessons' })
   const section = sectionForView(view.name)
   const { theme, setTheme } = useTheme()
 
@@ -51,13 +48,10 @@ export default function App(): React.JSX.Element {
     <div className="app">
       <div className="app-shell">
         <aside className="app-sidebar">
-          <h1 className="app-logo" onClick={() => setView({ name: 'home' })}>
+          <h1 className="app-logo" onClick={() => setView({ name: 'lessons' })}>
             汉语 Practice
           </h1>
           <nav className="app-nav-rail">
-            <button className={navItemClass('home')} onClick={() => setView({ name: 'home' })}>
-              Home
-            </button>
             <button className={navItemClass('lessons')} onClick={() => setView({ name: 'lessons' })}>
               <img className="app-nav-icon" src={navIconLearn} height={26} alt="" />
               Learn
@@ -95,16 +89,7 @@ export default function App(): React.JSX.Element {
         </aside>
 
         <main className={`app-main ${view.name === 'tutorChat' ? 'app-main-wide' : ''}`}>
-          <ErrorBoundary onReset={() => setView({ name: 'home' })}>
-            {view.name === 'home' && (
-              <Home
-                onStudyAll={() => setView({ name: 'study', deckId: null })}
-                onOpenLesson={(lessonId) => setView({ name: 'lesson', lessonId })}
-                onGoLearn={() => setView({ name: 'lessons' })}
-                onOpenTutor={() => setView({ name: 'tutorPicker' })}
-                onResumeTutor={(sessionId) => setView({ name: 'tutorChat', sessionId })}
-              />
-            )}
+          <ErrorBoundary onReset={() => setView({ name: 'lessons' })}>
             {view.name === 'decks' && (
               <DeckList
                 onStudy={(deckId) => setView({ name: 'study', deckId })}
