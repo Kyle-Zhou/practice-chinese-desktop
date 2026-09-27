@@ -363,6 +363,18 @@ code {
   font-size: 12.5px;
 }
 
+/* A round, icon-only button — same neutral fill as a plain .btn, just circular and sized to
+   its glyph instead of padded text. */
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 /* An active toggle takes the soft tint, not the full highlight: it usually sits beside the
    screen's primary action, and two solid yellows next to each other read as equal weight. */
 .btn-toggle-on {
@@ -435,10 +447,178 @@ input[type='radio'] {
   flex-shrink: 0;
 }
 
+/* --- Shared row affordances ---
+   A small icon button that opens a detail view, and a status line (icon + text) that reports
+   where something stands. Both originate on the Learn page's level cards and are reused
+   wherever a list row needs the same "go to detail" / "here's the state" vocabulary. */
+
+.chevron-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  margin: -6px;
+  background: none;
+  border: none;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.14s ease;
+}
+
+.chevron-btn:hover {
+  background: var(--fill);
+}
+
+/* Points right — "go to this section" rather than "expand this section". */
+.chevron-icon {
+  display: flex;
+  color: var(--ink-3);
+  transform: rotate(-90deg);
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.status-row--completed {
+  color: var(--green-ink);
+}
+
+.status-row--locked {
+  color: var(--ink-3);
+  font-weight: 650;
+}
+
+/* A short-lived prompt (name this thing, confirm this), not a page. Same elevated-surface
+   language as the dictionary results overlay: a solid ink border on paper, no shadow. */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(23, 22, 26, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+}
+
+.modal-panel {
+  width: 100%;
+  max-width: 380px;
+  background: var(--paper);
+  border: var(--bw) solid var(--ink);
+  border-radius: var(--r-xl);
+  padding: 24px;
+}
+
+.modal-panel h3 {
+  margin: 0 0 14px;
+  font-size: 16px;
+  font-weight: 750;
+}
+
+.modal-panel input {
+  width: 100%;
+  border-radius: var(--r-pill);
+  padding-left: 18px;
+}
+
+.modal-actions {
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 /* --- Deck list --- */
 
-.deck-list-toolbar {
-  margin-bottom: 22px;
+.deck-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.deck-list-header h2 {
+  margin: 0;
+}
+
+.deck-list-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.deck-section {
+  margin-bottom: 30px;
+}
+
+/* HSK decks are the fixed, official curriculum — shown as a grid of level tiles rather than
+   the personal-deck list rows, so the two feel like distinct shelves. */
+.deck-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+/* Same status-fill reasoning as .deck-card (see below): no border, the fill communicates
+   due / caught-up / empty. The badge circle reserves its own space on the right so the
+   status line never runs underneath it. */
+.deck-tile {
+  position: relative;
+  min-height: 148px;
+  padding: 18px 96px 18px 20px;
+  text-align: left;
+  background: var(--fill);
+  border: none;
+  border-radius: var(--r-xl);
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--ink);
+  transition: background-color 0.14s ease;
+}
+
+.deck-tile h4 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 750;
+}
+
+.deck-tile--due {
+  background: var(--yellow-soft);
+}
+
+.deck-tile--done {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--fill) 0px,
+    var(--fill) 12px,
+    var(--paper) 12px,
+    var(--paper) 24px
+  );
+}
+
+.deck-tile-badge {
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--paper);
+  font-size: 24px;
+  font-weight: 750;
 }
 
 .deck-cards {
@@ -450,20 +630,33 @@ input[type='radio'] {
   gap: 12px;
 }
 
+/* No border — same reasoning as the Learn page's level cards: the fill itself carries the
+   deck's status (needs review, caught up, empty), so there's nothing left to outline. */
 .deck-card {
-  background: var(--paper);
-  border: var(--bw) solid var(--line);
+  background: var(--fill);
   border-radius: var(--r-xl);
   padding: 18px 22px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  transition: border-color 0.14s ease;
+  transition: background-color 0.14s ease;
 }
 
-.deck-card:hover {
-  border-color: var(--yellow);
+.deck-card--due {
+  background: var(--yellow-soft);
+}
+
+/* Same diagonal stripe as a completed Learn level — neutral, not green, so the checkmark in
+   the status row is what says "done" rather than doubling up on color. */
+.deck-card--done {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--fill) 0px,
+    var(--fill) 12px,
+    var(--paper) 12px,
+    var(--paper) 24px
+  );
 }
 
 .deck-card-info h3 {
@@ -486,6 +679,7 @@ input[type='radio'] {
 
 .deck-card-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
   flex-shrink: 0;
 }
@@ -512,6 +706,12 @@ input[type='radio'] {
   align-items: center;
   margin-bottom: 26px;
   gap: 12px;
+}
+
+.study-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
 .study-remaining {
@@ -813,7 +1013,7 @@ input[type='radio'] {
 
 /* --- AI Tutor: shared --- */
 
-.tutor-section-title {
+.section-title {
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
@@ -1614,43 +1814,6 @@ input[type='radio'] {
   font-size: 13px;
 }
 
-/* --- Learn: home-screen entry point --- */
-
-.learn-banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  width: 100%;
-  text-align: left;
-  margin-bottom: 22px;
-  padding: 18px 22px;
-  background: var(--yellow-soft);
-  border: var(--bw) solid var(--yellow);
-  border-radius: var(--r-xl);
-  cursor: pointer;
-  font-family: inherit;
-  color: var(--ink);
-  transition: background-color 0.14s ease;
-}
-
-.learn-banner:hover {
-  background: var(--yellow);
-  color: var(--ink-solid);
-}
-
-.learn-banner-text {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  font-size: 16.5px;
-}
-
-.learn-banner-go {
-  font-weight: 750;
-  white-space: nowrap;
-}
-
 /* --- Learn: lesson path --- */
 
 .lesson-path-header {
@@ -1766,50 +1929,6 @@ input[type='radio'] {
 
 .lesson-level-subtitle:hover {
   text-decoration: underline;
-}
-
-/* Only this small icon button opens the section — the row it sits in (title, bubble,
-   progress) is just content, not one giant click target. */
-.lesson-level-chevron-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px;
-  margin: -6px;
-  background: none;
-  border: none;
-  border-radius: var(--r-pill);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background-color 0.14s ease;
-}
-
-.lesson-level-chevron-btn:hover {
-  background: var(--fill);
-}
-
-/* Points right — "go to this section" rather than "expand this section". */
-.lesson-level-chevron {
-  display: flex;
-  color: var(--ink-3);
-  transform: rotate(-90deg);
-}
-
-.lesson-level-status-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.lesson-level-status-row--completed {
-  color: var(--green-ink);
-}
-
-.lesson-level-status-row--locked {
-  color: var(--ink-3);
-  font-weight: 650;
 }
 
 .lesson-level-review {
@@ -2471,7 +2590,8 @@ input[type='radio'] {
 @media (max-width: 860px) {
   .home-hero,
   .card-form-grid,
-  .quiz-options {
+  .quiz-options,
+  .deck-grid {
     grid-template-columns: 1fr;
   }
 

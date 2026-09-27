@@ -139,7 +139,7 @@ export default function TutorScenarioPicker({ onExit, onOpenSession, onViewSumma
 
       {active.length > 0 && (
         <>
-          <h3 className="tutor-section-title">Continue</h3>
+          <h3 className="section-title">Continue</h3>
           <ul className="deck-cards">
             {active.map((s) => (
               <li key={s.id} className="deck-card">
@@ -179,7 +179,7 @@ export default function TutorScenarioPicker({ onExit, onOpenSession, onViewSumma
         </label>
       </div>
 
-      <h3 className="tutor-section-title">Free conversation</h3>
+      <h3 className="section-title">Free conversation</h3>
       <form className="new-deck-form" onSubmit={handleCreateTheme}>
         <input
           type="text"
@@ -194,12 +194,12 @@ export default function TutorScenarioPicker({ onExit, onOpenSession, onViewSumma
       </form>
       <ul className="deck-cards">{conversations.map(scenarioCard)}</ul>
 
-      <h3 className="tutor-section-title">Role-play</h3>
+      <h3 className="section-title">Role-play</h3>
       <ul className="deck-cards">{roleplays.map(scenarioCard)}</ul>
 
       {completed.length > 0 && (
         <>
-          <h3 className="tutor-section-title">Past sessions</h3>
+          <h3 className="section-title">Past sessions</h3>
           <ul className="deck-cards">
             {completed.map((s) => (
               <li key={s.id} className="deck-card">

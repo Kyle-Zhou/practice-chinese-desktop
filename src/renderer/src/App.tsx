@@ -103,7 +103,6 @@ export default function App(): React.JSX.Element {
               <DeckList
                 onStudy={(deckId) => setView({ name: 'study', deckId })}
                 onManage={(deckId) => setView({ name: 'manage', deckId })}
-                onLearn={() => setView({ name: 'lessons' })}
               />
             )}
             {view.name === 'study' && <StudySession deckId={view.deckId} onExit={() => setView({ name: 'decks' })} />}
