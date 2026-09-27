@@ -12,6 +12,9 @@ import StreakBadge from './components/StreakBadge'
 import TutorScenarioPicker from './components/TutorScenarioPicker'
 import TutorChat from './components/TutorChat'
 import TutorSummaryView from './components/TutorSummaryView'
+import navIconLearn from './assets/nav-icon-learn.png'
+import navIconDecks from './assets/nav-icon-decks.png'
+import navIconTutor from './assets/nav-icon-tutor.png'
 
 type View =
   | { name: 'home' }
@@ -49,19 +52,22 @@ export default function App(): React.JSX.Element {
       <div className="app-shell">
         <aside className="app-sidebar">
           <h1 className="app-logo" onClick={() => setView({ name: 'home' })}>
-            汉语 Chinese Anki
+            汉语 Practice
           </h1>
           <nav className="app-nav-rail">
             <button className={navItemClass('home')} onClick={() => setView({ name: 'home' })}>
               Home
             </button>
             <button className={navItemClass('lessons')} onClick={() => setView({ name: 'lessons' })}>
+              <img className="app-nav-icon" src={navIconLearn} height={26} alt="" />
               Learn
             </button>
             <button className={navItemClass('decks')} onClick={() => setView({ name: 'decks' })}>
+              <img className="app-nav-icon" src={navIconDecks} height={26} alt="" />
               Decks
             </button>
             <button className={navItemClass('tutor')} onClick={() => setView({ name: 'tutorPicker' })}>
+              <img className="app-nav-icon" src={navIconTutor} height={26} alt="" />
               AI Tutor
             </button>
           </nav>
