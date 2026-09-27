@@ -56,6 +56,20 @@
   --red-soft-press: #ffdcd9;
   --red-ink: #c81e1e;
 
+  /* HSK level accents — identity, not status: the tile's due/caught-up state still reads from
+     pattern (solid tint vs. diagonal stripe), so recoloring the fill per level never costs us
+     the status signal. Picked off the yellow/green/red hues so "level 3 teal" never reads as
+     "correct green". The bright anchor color is constant across themes, like yellow/green/red;
+     only the soft tint darkens for dark mode, same as --yellow-soft etc. */
+  --hsk-1: #4a90d9;
+  --hsk-1-soft: #eaf3fc;
+  --hsk-2: #9b6bd1;
+  --hsk-2-soft: #f3edfa;
+  --hsk-3: #2fb6a3;
+  --hsk-3-soft: #e6f9f6;
+  --hsk-4: #e8608a;
+  --hsk-4-soft: #fdecf1;
+
   /* Fixed near-black, independent of theme: text/icons on a bright yellow/green/red fill stay
      ink-on-colour in both themes, per the rule above — only paper-on-paper text flips. */
   --ink-solid: #17161a;
@@ -98,6 +112,11 @@
   --red-soft: #3a1c1c;
   --red-soft-press: #4a2424;
   --red-ink: #ff8a8a;
+
+  --hsk-1-soft: #1c2a3a;
+  --hsk-2-soft: #29203a;
+  --hsk-3-soft: #123028;
+  --hsk-4-soft: #3a1e28;
 
   --neutral-muted: #3a3740;
   --scrollbar-thumb: #3a3740;
@@ -569,12 +588,13 @@ input[type='radio'] {
 }
 
 /* Same status-fill reasoning as .deck-card (see below): no border, the fill communicates
-   due / caught-up / empty. The badge circle reserves its own space on the right so the
-   status line never runs underneath it. */
+   due / caught-up / empty. The numeral art sits behind the text as a low-opacity watermark
+   rather than a solid badge, so it never has to fight the status line for attention. */
 .deck-tile {
   position: relative;
+  overflow: hidden;
   min-height: 148px;
-  padding: 18px 96px 18px 20px;
+  padding: 18px 20px;
   text-align: left;
   background: var(--fill);
   border: none;
@@ -605,20 +625,86 @@ input[type='radio'] {
   );
 }
 
-.deck-tile-badge {
+/* Per-level fill: the level's own soft tint stands in for the generic yellow-soft/stripe above.
+   Status still reads from the pattern (solid vs. diagonal stripe), not the hue, so this doesn't
+   cost us the due/caught-up signal — it just recolors it per level. */
+.deck-tile--level-1.deck-tile--due {
+  background: var(--hsk-1-soft);
+}
+
+.deck-tile--level-1.deck-tile--done {
+  background-image: repeating-linear-gradient(135deg, var(--hsk-1-soft) 0px, var(--hsk-1-soft) 12px, var(--paper) 12px, var(--paper) 24px);
+}
+
+.deck-tile--level-2.deck-tile--due {
+  background: var(--hsk-2-soft);
+}
+
+.deck-tile--level-2.deck-tile--done {
+  background-image: repeating-linear-gradient(135deg, var(--hsk-2-soft) 0px, var(--hsk-2-soft) 12px, var(--paper) 12px, var(--paper) 24px);
+}
+
+.deck-tile--level-3.deck-tile--due {
+  background: var(--hsk-3-soft);
+}
+
+.deck-tile--level-3.deck-tile--done {
+  background-image: repeating-linear-gradient(135deg, var(--hsk-3-soft) 0px, var(--hsk-3-soft) 12px, var(--paper) 12px, var(--paper) 24px);
+}
+
+.deck-tile--level-4.deck-tile--due {
+  background: var(--hsk-4-soft);
+}
+
+.deck-tile--level-4.deck-tile--done {
+  background-image: repeating-linear-gradient(135deg, var(--hsk-4-soft) 0px, var(--hsk-4-soft) 12px, var(--paper) 12px, var(--paper) 24px);
+}
+
+/* The big brush-stroke numeral + its sparkle accents, bleeding off the tile's bottom-right
+   corner the same way the Learn page's mascot bleeds off its level cards. currentColor +
+   opacity here (not baked into the art) is what makes it read correctly against both the
+   due tint and the caught-up stripe, and flip automatically with the dark theme. */
+.deck-tile-art {
   position: absolute;
-  top: 50%;
-  right: 20px;
-  transform: translateY(-50%);
-  width: 60px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--paper);
-  font-size: 24px;
-  font-weight: 750;
+  inset: 0;
+  pointer-events: none;
+  color: var(--ink);
+  opacity: 0.15;
+}
+
+/* Per-level identity color, stronger than the plain-ink default so the hue actually reads —
+   still translucent, so it never competes with the due/caught-up fill or the foreground text. */
+.deck-tile-art--level-1 {
+  color: var(--hsk-1);
+  opacity: 0.32;
+}
+
+.deck-tile-art--level-2 {
+  color: var(--hsk-2);
+  opacity: 0.32;
+}
+
+.deck-tile-art--level-3 {
+  color: var(--hsk-3);
+  opacity: 0.32;
+}
+
+.deck-tile-art--level-4 {
+  color: var(--hsk-4);
+  opacity: 0.32;
+}
+
+.deck-tile-art svg {
+  position: absolute;
+  right: -18px;
+  bottom: -22px;
+  width: 62%;
+  height: auto;
+}
+
+.deck-tile-content {
+  position: relative;
+  z-index: 1;
 }
 
 .deck-cards {

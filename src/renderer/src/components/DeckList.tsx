@@ -30,13 +30,73 @@ function PlusIcon(): React.JSX.Element {
   )
 }
 
-// A single numeral badge per level rather than a real vocabulary character — it's decoration,
-// and the level number itself is the one thing every learner already recognizes.
-const HSK_LEVEL_BADGE: Record<number, string> = { 1: '一', 2: '二', 3: '三', 4: '四' }
-
 function hskLevel(deckName: string): number | null {
   const match = /^HSK (\d+)$/.exec(deckName)
   return match ? Number(match[1]) : null
+}
+
+function Sparkle({ x, y, size }: { x: number; y: number; size: number }): React.JSX.Element {
+  const d =
+    `M${x} ${y - size} L${x + size * 0.3} ${y - size * 0.3} L${x + size} ${y} ` +
+    `L${x + size * 0.3} ${y + size * 0.3} L${x} ${y + size} L${x - size * 0.3} ${y + size * 0.3} ` +
+    `L${x - size} ${y} L${x - size * 0.3} ${y - size * 0.3} Z`
+  return <path d={d} fill="currentColor" />
+}
+
+// One sparkle per level — the sprinkle count doubles as a quiet nod to "how far in" this level
+// is. Drawn in currentColor at a fixed tilt so .deck-tile-art's CSS is the only place that sets
+// the actual ink tint/opacity, matching the level number rather than a real vocabulary word:
+// it's decoration, and the number is the one character every learner already recognizes.
+const LEVEL_SPARKLES: Record<number, { x: number; y: number; size: number }[]> = {
+  1: [{ x: 165, y: 20, size: 10 }],
+  2: [
+    { x: 150, y: 18, size: 9 },
+    { x: 176, y: 36, size: 7 }
+  ],
+  3: [
+    { x: 150, y: 16, size: 9 },
+    { x: 176, y: 32, size: 7 },
+    { x: 158, y: 122, size: 8 }
+  ],
+  4: [
+    { x: 18, y: 18, size: 8 },
+    { x: 182, y: 18, size: 8 },
+    { x: 18, y: 120, size: 7 },
+    { x: 182, y: 120, size: 7 }
+  ]
+}
+
+function HskNumeralArt({ level }: { level: number }): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 200 150" aria-hidden="true">
+      <g transform="rotate(-6 100 75)">
+        {level === 1 && <rect x="35" y="68" width="130" height="16" rx="8" fill="currentColor" />}
+        {level === 2 && (
+          <>
+            <rect x="55" y="48" width="95" height="14" rx="7" fill="currentColor" />
+            <rect x="35" y="86" width="130" height="14" rx="7" fill="currentColor" />
+          </>
+        )}
+        {level === 3 && (
+          <>
+            <rect x="45" y="38" width="115" height="13" rx="6.5" fill="currentColor" />
+            <rect x="58" y="67" width="88" height="13" rx="6.5" fill="currentColor" />
+            <rect x="40" y="96" width="122" height="13" rx="6.5" fill="currentColor" />
+          </>
+        )}
+        {level === 4 && (
+          <>
+            <rect x="42" y="28" width="120" height="100" rx="18" fill="none" stroke="currentColor" strokeWidth="13" />
+            <path d="M80 54 v24 q0 12 9 12" fill="none" stroke="currentColor" strokeWidth="10" strokeLinecap="round" />
+            <path d="M124 54 v24 q0 12 -9 12" fill="none" stroke="currentColor" strokeWidth="10" strokeLinecap="round" />
+          </>
+        )}
+        {(LEVEL_SPARKLES[level] ?? []).map((s, i) => (
+          <Sparkle key={i} {...s} />
+        ))}
+      </g>
+    </svg>
+  )
 }
 
 export default function DeckList({ onStudy, onManage }: Props): React.JSX.Element {
@@ -110,20 +170,24 @@ export default function DeckList({ onStudy, onManage }: Props): React.JSX.Elemen
               return (
                 <button
                   key={deck.id}
-                  className={`deck-tile ${variant}`}
+                  className={`deck-tile deck-tile--level-${level} ${variant}`}
                   onClick={() => (deck.dueCount > 0 ? onStudy(deck.id) : onManage(deck.id))}
                 >
-                  <h4>{deck.name}</h4>
-                  {isEmpty ? (
-                    <p className="deck-stats">No cards yet</p>
-                  ) : isCaughtUp ? (
-                    <div className="status-row status-row--completed">
-                      <CheckIcon /> All caught up
-                    </div>
-                  ) : (
-                    <p className="deck-stats">{deck.dueCount} due</p>
-                  )}
-                  <span className="deck-tile-badge">{HSK_LEVEL_BADGE[level] ?? level}</span>
+                  <div className={`deck-tile-art deck-tile-art--level-${level}`}>
+                    <HskNumeralArt level={level} />
+                  </div>
+                  <div className="deck-tile-content">
+                    <h4>{deck.name}</h4>
+                    {isEmpty ? (
+                      <p className="deck-stats">No cards yet</p>
+                    ) : isCaughtUp ? (
+                      <div className="status-row status-row--completed">
+                        <CheckIcon /> All caught up
+                      </div>
+                    ) : (
+                      <p className="deck-stats">{deck.dueCount} due</p>
+                    )}
+                  </div>
                 </button>
               )
             })}
