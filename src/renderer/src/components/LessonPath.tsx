@@ -86,15 +86,15 @@ function LevelCard({
               {totalWords} words · See summary
             </button>
           </div>
-          <button className="lesson-level-chevron-btn" onClick={onOpenDetail} aria-label={`View HSK ${level} lessons`}>
-            <span className="lesson-level-chevron">
+          <button className="chevron-btn" onClick={onOpenDetail} aria-label={`View HSK ${level} lessons`}>
+            <span className="chevron-icon">
               <ChevronIcon />
             </span>
           </button>
         </div>
 
         {status === 'completed' && (
-          <div className="lesson-level-status-row lesson-level-status-row--completed">
+          <div className="status-row status-row--completed">
             <CheckIcon /> Completed!
           </div>
         )}
@@ -114,7 +114,7 @@ function LevelCard({
         )}
 
         {status === 'locked' && (
-          <div className="lesson-level-status-row lesson-level-status-row--locked">
+          <div className="status-row status-row--locked">
             <LockIcon /> {total} lessons locked
           </div>
         )}

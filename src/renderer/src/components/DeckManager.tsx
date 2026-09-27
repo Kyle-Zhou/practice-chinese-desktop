@@ -74,16 +74,28 @@ export default function DeckManager({ deckId, onExit }: Props): React.JSX.Elemen
     await refresh()
   }
 
+  async function handleDeleteDeck(): Promise<void> {
+    if (!deck) return
+    if (!confirm(`Delete deck "${deck.name}" and all its cards? This can't be undone.`)) return
+    await window.api.decks.delete(deckId)
+    onExit()
+  }
+
   return (
     <div className="deck-manager">
       <div className="study-toolbar">
-        <button className="btn" onClick={onExit}>
-          ← Back to decks
+        <div className="study-toolbar-left">
+          <button className="btn" onClick={onExit}>
+            ← Back to decks
+          </button>
+          <span>
+            {deck ? `${deck.name} · ` : ''}
+            {cards.length} cards
+          </span>
+        </div>
+        <button className="btn btn-danger btn-small" onClick={handleDeleteDeck}>
+          Delete deck
         </button>
-        <span>
-          {deck ? `${deck.name} · ` : ''}
-          {cards.length} cards
-        </span>
       </div>
 
       <form className="card-form" onSubmit={handleSubmit}>
