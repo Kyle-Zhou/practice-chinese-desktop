@@ -2051,31 +2051,6 @@ input[type='radio'] {
   white-space: nowrap;
 }
 
-.lesson-preview-bubble {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 10px 14px;
-  background: var(--paper);
-  border-radius: var(--r-lg);
-}
-
-.lesson-preview-pinyin {
-  font-size: 11.5px;
-  font-weight: 650;
-  color: var(--ink-3);
-}
-
-.lesson-preview-hanzi {
-  font-size: 16px;
-  font-weight: 750;
-}
-
-.lesson-preview-english {
-  font-size: 12.5px;
-  color: var(--ink-2);
-}
-
 .lesson-level-cta {
   white-space: nowrap;
   text-transform: uppercase;
@@ -2498,192 +2473,15 @@ input[type='radio'] {
   font-weight: 700;
 }
 
-/* --- Home / dashboard ---
-   Uses the same paper/line/ink/token vocabulary as the rest of the app: bordered cards, pill
-   buttons, and the green progress bars reused from the lesson path. */
-
-.home {
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-}
-
-.home-greeting h2 {
-  margin: 0 0 4px;
-}
-
-.home-hero {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.home-action {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 22px 24px;
-  background: var(--paper);
-  border: var(--bw) solid var(--line);
-  border-radius: var(--r-xl);
-}
-
-.home-action-label {
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ink-3);
-}
-
-.home-action-figure {
-  margin: 2px 0;
-  font-size: 40px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
-}
-
-.home-action-figure span {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--ink-2);
-}
-
-.home-action-title {
-  margin: 2px 0;
-  font-size: 20px;
-  font-weight: 750;
-  letter-spacing: -0.01em;
-}
-
-/* Keep the call-to-action pinned to the card's foot so the two hero cards line up. */
-.home-action .btn {
-  margin-top: auto;
-}
-
-.home-section h3,
-.home-tutor h3 {
-  margin: 0 0 14px;
-  font-size: 17px;
-}
-
-.home-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.home-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 18px 20px;
-  background: var(--paper);
-  border: var(--bw) solid var(--line);
-  border-radius: var(--r-lg);
-}
-
-.home-stat-value {
-  font-size: 30px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.home-stat-total {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--ink-3);
-}
-
-.home-stat-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-3);
-}
-
-.home-levels {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.home-level {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-  text-align: left;
-  padding: 16px 18px;
-  background: var(--paper);
-  border: var(--bw) solid var(--line);
-  border-radius: var(--r-lg);
-  cursor: pointer;
-  font-family: inherit;
-  color: var(--ink);
-  transition: border-color 0.14s ease;
-}
-
-.home-level:hover {
-  border-color: var(--yellow);
-}
-
-.home-level-heading {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Level name on its own line above a spelled-out count, so "HSK 1" and "0 of 20" can't run
-   together into an ambiguous "HSK 10 / 20". */
-.home-level-name {
-  font-weight: 750;
-  font-size: 14.5px;
-}
-
-.home-level-count {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-3);
-  margin-bottom: 6px;
-}
-
-.home-tutor {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 20px 24px;
-  background: var(--paper);
-  border: var(--bw) solid var(--line);
-  border-radius: var(--r-xl);
-}
-
-.home-tutor h3 {
-  margin: 0 0 4px;
-}
-
-.home-tutor .btn {
-  flex-shrink: 0;
-}
-
 /* --- Narrow window ---
    The window is user-resizable down to 720x560 (see BrowserWindow minWidth/minHeight in
    src/main/index.ts), well below the widths these multi-column grids assume. */
 
 @media (max-width: 860px) {
-  .home-hero,
   .card-form-grid,
   .quiz-options,
   .deck-grid {
     grid-template-columns: 1fr;
-  }
-
-  .home-stats,
-  .home-levels {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
