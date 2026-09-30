@@ -525,6 +525,11 @@ input[type='radio'] {
   justify-content: center;
   padding: 20px;
   z-index: 100;
+  /* Forces its own compositor layer so it fully occludes whatever's behind it — without this,
+     a modal opened over a screen with its own animating layer (e.g. the voice call's orb,
+     whose scale updates on every audio frame) can show that layer's text bleeding through. */
+  isolation: isolate;
+  will-change: transform;
 }
 
 .modal-panel {
@@ -542,7 +547,10 @@ input[type='radio'] {
   font-weight: 750;
 }
 
-.modal-panel input {
+/* Excludes checkbox/radio so this doesn't stretch their flex-basis to the panel's full width
+   (same gotcha as .settings-card input below) — a checkbox visually stays its native size
+   either way, but a 100%-wide flex-basis shoves its label text out past the panel edge. */
+.modal-panel input:not([type='checkbox']):not([type='radio']) {
   width: 100%;
   border-radius: var(--r-pill);
   padding-left: 18px;
@@ -1108,31 +1116,6 @@ input[type='radio'] {
   margin: 30px 0 12px;
 }
 
-.tutor-mode-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 18px 0 6px;
-  background: var(--yellow-soft);
-  border-radius: var(--r-lg);
-  padding: 16px 18px;
-}
-
-.tutor-mode-picker label {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  font-size: 13.5px;
-  color: var(--ink-2);
-  cursor: pointer;
-  line-height: 1.45;
-}
-
-.tutor-mode-picker strong {
-  color: var(--ink);
-  font-weight: 750;
-}
-
 .tutor-error a {
   color: var(--red-ink);
   text-decoration-color: var(--red-ink);
@@ -1443,6 +1426,11 @@ input[type='radio'] {
 
 /* --- AI Tutor: summary --- */
 
+.tutor-summary > .btn-icon {
+  display: flex;
+  margin-bottom: 14px;
+}
+
 .tutor-summary h2 {
   font-size: 27px;
   display: inline-block;
@@ -1669,32 +1657,6 @@ input[type='radio'] {
   font-style: italic;
 }
 
-.voice-caption-toggles {
-  display: flex;
-  gap: 8px;
-}
-
-.voice-annotation-toggle {
-  font-size: 12px;
-  font-weight: 750;
-  border: var(--bw) solid var(--line);
-  background: var(--paper);
-  color: var(--ink-2);
-  border-radius: var(--r-pill);
-  padding: 5px 13px;
-  cursor: pointer;
-  transition: background-color 0.14s ease;
-}
-
-.voice-annotation-toggle:hover {
-  background: var(--fill);
-}
-
-.voice-annotation-toggle-active {
-  background: var(--yellow);
-  color: var(--ink-solid);
-}
-
 .voice-correction {
   display: flex;
   flex-direction: column;
@@ -1749,6 +1711,62 @@ input[type='radio'] {
 
 .voice-control-end:hover:not(:disabled) {
   background: var(--red-press);
+}
+
+/* Docked to the voice screen's right edge rather than a modal, so it can stay open across
+   turns without blocking the orb, captions, or controls underneath. */
+.voice-transcript {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 360px;
+  max-width: 85vw;
+  background: var(--paper-2);
+  border-left: var(--bw) solid var(--line);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 20px;
+  gap: 14px;
+  z-index: 60;
+}
+
+.voice-transcript-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+
+.voice-transcript-close {
+  width: 28px;
+  height: 28px;
+}
+
+.voice-transcript-messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 4px;
+}
+
+.voice-transcript-pinyin,
+.voice-transcript-english {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  font-weight: 550;
+  color: var(--ink-3);
+}
+
+.voice-transcript-english {
+  font-style: italic;
 }
 
 /* --- Scrollbars ---

@@ -4,7 +4,6 @@ import { join } from 'path'
 import { NEW_CARD_STATE, schedule } from '../shared/sm2'
 import { mergeCompleted, planProgress } from '../shared/plan'
 import { normalizePinyin } from '../shared/pinyin'
-import { shortGloss } from '../shared/text'
 import type {
   Card,
   Correction,
@@ -24,7 +23,6 @@ import type {
   Scenario,
   ScenarioKind,
   StreakInfo,
-  TextAnnotation,
   TutorMessage,
   TutorSession,
   TutorSessionSummaryRow,
@@ -563,6 +561,18 @@ export function listTutorSessions(): TutorSessionSummaryRow[] {
   })
 }
 
+/** Correction mode is a session-time control, changeable mid-conversation (see prompts.ts's
+ *  caching note: this busts the reply system prompt cache from the next turn on, which is an
+ *  acceptable one-off cost for a rarely-toggled preference). */
+export function setTutorCorrectionMode(sessionId: number, correctionMode: CorrectionMode): TutorSession {
+  db.prepare(`UPDATE tutor_sessions SET correction_mode = ?, updated_at = ? WHERE id = ?`).run(
+    correctionMode,
+    new Date().toISOString(),
+    sessionId
+  )
+  return getTutorSession(sessionId)
+}
+
 export function deleteTutorSession(id: number): void {
   db.prepare(`DELETE FROM tutor_sessions WHERE id = ?`).run(id)
 }
@@ -825,14 +835,15 @@ function lookupExactSimplified(word: string): DictionaryRow | null {
 }
 
 /**
- * Best-effort pinyin + English gloss for arbitrary tutor speech, with no AI call: a greedy
- * longest-match segmentation against the local CC-CEDICT table (same dictionary the search box
- * and card lookups use). Good enough for a caption; it has no context to disambiguate rare
- * polyphonic characters or unseeded words, which just pass through as bare hanzi.
+ * Best-effort pinyin for arbitrary tutor speech, with no AI call: a greedy longest-match
+ * segmentation against the local CC-CEDICT table (same dictionary the search box and card
+ * lookups use). Good enough for a caption; it has no context to disambiguate rare polyphonic
+ * characters or unseeded words, which just pass through as bare hanzi. English is a separate,
+ * sentence-level translation (see `translateToEnglish`) — per-word gloss concatenation reads
+ * as word salad for anything longer than a single term.
  */
-export function annotateHanzi(text: string): TextAnnotation {
+export function pinyinForText(text: string): string {
   const pinyinParts: string[] = []
-  const englishParts: string[] = []
   let i = 0
   while (i < text.length) {
     const ch = text[i]
@@ -851,21 +862,13 @@ export function annotateHanzi(text: string): TextAnnotation {
         break
       }
     }
-    if (matched) {
-      pinyinParts.push(matched.pinyin)
-      englishParts.push(shortGloss(matched.english, 1))
-    } else {
-      pinyinParts.push(ch)
-    }
+    pinyinParts.push(matched ? matched.pinyin : ch)
     i += matchedLen
   }
-  return {
-    pinyin: pinyinParts
-      .join(' ')
-      .replace(/\s*([，。！？、,.!?…])\s*/g, '$1 ')
-      .trim(),
-    english: englishParts.join(' · ')
-  }
+  return pinyinParts
+    .join(' ')
+    .replace(/\s*([，。！？、,.!?…])\s*/g, '$1 ')
+    .trim()
 }
 
 // --- Lessons ---

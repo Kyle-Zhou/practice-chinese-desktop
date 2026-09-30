@@ -1,4 +1,5 @@
-import type { Correction, VoiceMode } from '@shared/types'
+import { useEffect, useRef } from 'react'
+import type { Correction, TutorMessage, VoiceMode } from '@shared/types'
 import type { MicState } from '../hooks/useVoiceLoop'
 import { useTextAnnotation } from '../hooks/useTextAnnotation'
 
@@ -23,18 +24,26 @@ interface Props {
   themeName: string
   error: string | null
   voiceMode: VoiceMode
-  onToggleVoiceMode: () => void
   /** Push-to-talk only: the orb is held down to record. */
   onPressStart: () => void
   onPressEnd: () => void
   onToggleMute: () => void
+  /** Deafen: stop hearing the tutor without affecting your own mic. */
+  autoSpeak: boolean
+  onToggleAutoSpeak: () => void
   paused: boolean
   onTogglePause: () => void
   showPinyin: boolean
-  onTogglePinyin: () => void
   showEnglish: boolean
-  onToggleEnglish: () => void
-  onShowChat: () => void
+  onOpenSettings: () => void
+  /** The full conversation so far, for the transcript side panel. */
+  messages: TutorMessage[]
+  /** The tutor's reply as it streams in, appended live at the bottom of the transcript. */
+  streamingText: string
+  transcriptOpen: boolean
+  onToggleTranscript: () => void
+  /** Undefined while typed input is disabled — the button that leads to it is simply not shown. */
+  onShowChat?: () => void
   onEnd: () => void
   ending: boolean
 }
@@ -93,13 +102,51 @@ function MicOffIcon(): React.JSX.Element {
   )
 }
 
-function HandIcon(): React.JSX.Element {
+function SpeakerIcon(): React.JSX.Element {
   return (
     <svg {...iconProps()}>
-      <path d="M8 13V5a1.5 1.5 0 0 1 3 0v6" />
-      <path d="M11 11V4a1.5 1.5 0 0 1 3 0v7" />
-      <path d="M14 11V5a1.5 1.5 0 0 1 3 0v7" />
-      <path d="M17 11.5V8a1.5 1.5 0 0 1 3 0v6a6 6 0 0 1-6 6h-2a6 6 0 0 1-5-2.7L4.3 13.7a1.5 1.5 0 0 1 2.4-1.8L8 13" />
+      <polygon points="10 5 5 9 2 9 2 15 5 15 10 19 10 5" />
+      <path d="M14.5 8.5a5 5 0 0 1 0 7" />
+      <path d="M17.5 5.5a9 9 0 0 1 0 13" />
+    </svg>
+  )
+}
+
+function SpeakerOffIcon(): React.JSX.Element {
+  return (
+    <svg {...iconProps()}>
+      <polygon points="10 5 5 9 2 9 2 15 5 15 10 19 10 5" />
+      <line x1="22" y1="9" x2="16" y2="15" />
+      <line x1="16" y1="9" x2="22" y2="15" />
+    </svg>
+  )
+}
+
+/** Matches the gear used for the app-wide Settings nav item, so "session settings" reads as the same concept. */
+function GearIcon(): React.JSX.Element {
+  return (
+    <svg {...iconProps()}>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  )
+}
+
+function TranscriptIcon(): React.JSX.Element {
+  return (
+    <svg {...iconProps()}>
+      <path d="M4 6h16" />
+      <path d="M4 12h16" />
+      <path d="M4 18h10" />
+    </svg>
+  )
+}
+
+function CloseIcon(): React.JSX.Element {
+  return (
+    <svg {...iconProps()}>
+      <line x1="5" y1="5" x2="19" y2="19" />
+      <line x1="19" y1="5" x2="5" y2="19" />
     </svg>
   )
 }
@@ -144,9 +191,36 @@ function EndIcon(): React.JSX.Element {
 }
 
 /**
+ * One transcript row. Pinyin/English follow the same two toggles as the live caption, and
+ * apply to both sides of the conversation — your own voice-transcribed Chinese benefits from
+ * the same reading help as the tutor's. `useTextAnnotation` does one dictionary lookup per
+ * bubble, which is why this is its own component rather than inline in a `.map`.
+ */
+function TranscriptBubble({
+  message,
+  showPinyin,
+  showEnglish
+}: {
+  message: TutorMessage
+  showPinyin: boolean
+  showEnglish: boolean
+}): React.JSX.Element {
+  const annotation = useTextAnnotation(message.text, showPinyin, showEnglish)
+  return (
+    <div className={`tutor-bubble tutor-bubble-${message.role}`}>
+      {message.source === 'voice' && <span className="tutor-bubble-icon">🎤 </span>}
+      {message.text}
+      {showPinyin && annotation.pinyin && <p className="voice-transcript-pinyin">{annotation.pinyin}</p>}
+      {showEnglish && annotation.english && <p className="voice-transcript-english">{annotation.english}</p>}
+    </div>
+  )
+}
+
+/**
  * Full-screen voice view. The orb reflects who is talking; in push-to-talk it doubles as the
- * record button, so the same screen works in both modes and the mode can be switched from the
- * control row without leaving the conversation.
+ * record button, so the same screen works in both modes. Every other configurable — voice
+ * mode included — lives behind the settings gear in the control row, so switching never
+ * requires leaving the conversation.
  */
 export default function VoiceOverlay(props: Props): React.JSX.Element {
   const {
@@ -161,12 +235,21 @@ export default function VoiceOverlay(props: Props): React.JSX.Element {
     ending,
     voiceMode,
     paused,
+    autoSpeak,
     showPinyin,
-    showEnglish
+    showEnglish,
+    messages,
+    streamingText,
+    transcriptOpen
   } = props
   const scale = status === 'capturing' ? 1 + level * 0.6 : status === 'speaking' ? 1.08 : 1
   const pushToTalk = voiceMode === 'pushToTalk'
-  const annotation = useTextAnnotation(caption, showPinyin || showEnglish)
+  const annotation = useTextAnnotation(caption, showPinyin, showEnglish)
+
+  const transcriptEndRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (transcriptOpen) transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [transcriptOpen, messages, streamingText])
 
   // Idle in push-to-talk is "waiting for you to press", not "listening" — the orb shouldn't
   // breathe as though it were already hearing you.
@@ -202,26 +285,6 @@ export default function VoiceOverlay(props: Props): React.JSX.Element {
       </div>
 
       <div className="voice-captions">
-        <div className="voice-caption-toggles">
-          <button
-            type="button"
-            className={`voice-annotation-toggle ${showPinyin ? 'voice-annotation-toggle-active' : ''}`}
-            onClick={props.onTogglePinyin}
-            aria-pressed={showPinyin}
-            title={showPinyin ? 'Hide pinyin' : 'Show pinyin'}
-          >
-            拼音
-          </button>
-          <button
-            type="button"
-            className={`voice-annotation-toggle ${showEnglish ? 'voice-annotation-toggle-active' : ''}`}
-            onClick={props.onToggleEnglish}
-            aria-pressed={showEnglish}
-            title={showEnglish ? 'Hide English' : 'Show English'}
-          >
-            EN
-          </button>
-        </div>
         {lastUserText && <p className="voice-caption-user">{lastUserText}</p>}
         <p className="voice-caption-tutor">{caption || ' '}</p>
         {showPinyin && annotation.pinyin && <p className="voice-caption-pinyin">{annotation.pinyin}</p>}
@@ -239,19 +302,11 @@ export default function VoiceOverlay(props: Props): React.JSX.Element {
       <div className="voice-controls">
         <button
           className="voice-control"
-          onClick={props.onToggleVoiceMode}
-          aria-label={
-            pushToTalk
-              ? 'Push to talk — click to switch to hands-free'
-              : 'Hands-free — click to switch to push to talk'
-          }
-          title={
-            pushToTalk
-              ? 'Push to talk — click to switch to hands-free'
-              : 'Hands-free — click to switch to push to talk'
-          }
+          onClick={props.onOpenSettings}
+          aria-label="Session settings"
+          title="Session settings"
         >
-          {pushToTalk ? <HandIcon /> : <MicIcon />}
+          <GearIcon />
         </button>
         <button
           className={`voice-control ${status === 'muted' ? 'voice-control-active' : ''}`}
@@ -263,6 +318,14 @@ export default function VoiceOverlay(props: Props): React.JSX.Element {
           {status === 'muted' ? <MicIcon /> : <MicOffIcon />}
         </button>
         <button
+          className={`voice-control ${!autoSpeak ? 'voice-control-active' : ''}`}
+          onClick={props.onToggleAutoSpeak}
+          aria-label={autoSpeak ? 'Deafen: stop hearing the tutor' : 'Undeafen: hear the tutor again'}
+          title={autoSpeak ? 'Deafen: stop hearing the tutor' : 'Undeafen: hear the tutor again'}
+        >
+          {autoSpeak ? <SpeakerIcon /> : <SpeakerOffIcon />}
+        </button>
+        <button
           className={`voice-control ${paused ? 'voice-control-active' : ''}`}
           onClick={props.onTogglePause}
           aria-label={paused ? 'Resume conversation' : 'Pause conversation'}
@@ -271,13 +334,23 @@ export default function VoiceOverlay(props: Props): React.JSX.Element {
           {paused ? <PlayIcon /> : <PauseIcon />}
         </button>
         <button
-          className="voice-control"
-          onClick={props.onShowChat}
-          aria-label="Show transcript and type"
-          title="Show transcript and type"
+          className={`voice-control ${transcriptOpen ? 'voice-control-active' : ''}`}
+          onClick={props.onToggleTranscript}
+          aria-label={transcriptOpen ? 'Hide transcript' : 'Show transcript'}
+          title={transcriptOpen ? 'Hide transcript' : 'Show transcript'}
         >
-          <KeyboardIcon />
+          <TranscriptIcon />
         </button>
+        {props.onShowChat && (
+          <button
+            className="voice-control"
+            onClick={props.onShowChat}
+            aria-label="Switch to typed input"
+            title="Switch to typed input"
+          >
+            <KeyboardIcon />
+          </button>
+        )}
         <button
           className="voice-control voice-control-end"
           onClick={props.onEnd}
@@ -288,6 +361,30 @@ export default function VoiceOverlay(props: Props): React.JSX.Element {
           {ending ? '…' : <EndIcon />}
         </button>
       </div>
+
+      {transcriptOpen && (
+        <aside className="voice-transcript">
+          <div className="voice-transcript-header">
+            <span>Transcript</span>
+            <button className="btn btn-icon voice-transcript-close" onClick={props.onToggleTranscript} aria-label="Close transcript">
+              <CloseIcon />
+            </button>
+          </div>
+          <div className="voice-transcript-messages">
+            {messages.map((m, i) => (
+              <TranscriptBubble key={i} message={m} showPinyin={showPinyin} showEnglish={showEnglish} />
+            ))}
+            {streamingText && (
+              <TranscriptBubble
+                message={{ role: 'assistant', text: streamingText }}
+                showPinyin={showPinyin}
+                showEnglish={showEnglish}
+              />
+            )}
+            <div ref={transcriptEndRef} />
+          </div>
+        </aside>
+      )}
     </div>
   )
 }

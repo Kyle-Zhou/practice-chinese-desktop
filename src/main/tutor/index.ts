@@ -9,11 +9,13 @@ import {
   appendTutorTurn,
   completeTutorSession,
   createTutorSession,
-  getTutorSession
+  getTutorSession,
+  setTutorCorrectionMode
 } from '../db'
 import { planProgress } from '../../shared/plan'
 import { SentenceSplitter } from '../../shared/text'
 import type {
+  CorrectionMode,
   StartSessionInput,
   TurnAnalysis,
   TutorEvent,
@@ -26,11 +28,16 @@ import type {
 export { transcribe } from './stt'
 export { synthesize } from './tts'
 export { createTheme } from './theme'
+export { translateToEnglish } from './translate'
 
 export type EmitEvent = (event: TutorEvent) => void
 
 export function startSession(input: StartSessionInput): TutorSession {
   return createTutorSession(input.scenarioId, input.correctionMode ?? 'inline')
+}
+
+export function setCorrectionMode(sessionId: number, correctionMode: CorrectionMode): TutorSession {
+  return setTutorCorrectionMode(sessionId, correctionMode)
 }
 
 /** Streams a tutor reply, emitting chunks and sentence boundaries, and returns the full text. */
