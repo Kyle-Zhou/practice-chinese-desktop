@@ -81,7 +81,7 @@ export interface AppSettings {
   voiceShowEnglish: boolean
 }
 
-/** Best-effort pinyin + English gloss for a run of text, looked up word-by-word in the local dictionary. */
+/** Pinyin from the local dictionary (word-by-word) plus a real sentence-level English translation. */
 export interface TextAnnotation {
   pinyin: string
   english: string

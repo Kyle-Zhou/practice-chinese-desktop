@@ -10,6 +10,7 @@ import Settings from './components/Settings'
 import StreakBadge from './components/StreakBadge'
 import TutorScenarioPicker from './components/TutorScenarioPicker'
 import TutorChat from './components/TutorChat'
+import TutorHistory from './components/TutorHistory'
 import TutorSummaryView from './components/TutorSummaryView'
 import navIconLearn from './assets/nav-icon-learn.png'
 import navIconDecks from './assets/nav-icon-decks.png'
@@ -23,6 +24,7 @@ type View =
   | { name: 'lesson'; lessonId: string }
   | { name: 'settings' }
   | { name: 'tutorPicker' }
+  | { name: 'tutorHistory' }
   | { name: 'tutorChat'; sessionId: number }
   | { name: 'tutorSummary'; sessionId: number }
 
@@ -31,7 +33,8 @@ type Section = 'lessons' | 'decks' | 'tutor' | 'settings'
 
 function sectionForView(name: View['name']): Section {
   if (name === 'decks' || name === 'study' || name === 'manage') return 'decks'
-  if (name === 'tutorPicker' || name === 'tutorChat' || name === 'tutorSummary') return 'tutor'
+  if (name === 'tutorPicker' || name === 'tutorHistory' || name === 'tutorChat' || name === 'tutorSummary')
+    return 'tutor'
   if (name === 'settings') return 'settings'
   return 'lessons'
 }
@@ -115,10 +118,15 @@ export default function App(): React.JSX.Element {
             )}
             {view.name === 'tutorPicker' && (
               <TutorScenarioPicker
-                onExit={() => setView({ name: 'decks' })}
                 onOpenSession={(sessionId) => setView({ name: 'tutorChat', sessionId })}
-                onViewSummary={(sessionId) => setView({ name: 'tutorSummary', sessionId })}
+                onViewHistory={() => setView({ name: 'tutorHistory' })}
                 onOpenSettings={() => setView({ name: 'settings' })}
+              />
+            )}
+            {view.name === 'tutorHistory' && (
+              <TutorHistory
+                onExit={() => setView({ name: 'tutorPicker' })}
+                onViewSummary={(sessionId) => setView({ name: 'tutorSummary', sessionId })}
               />
             )}
             {view.name === 'tutorChat' && (

@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 import type {
   AppSettings,
   Card,
+  CorrectionMode,
   Deck,
   DictionaryEntry,
   Grade,
@@ -17,7 +18,6 @@ import type {
   StartSessionInput,
   StreakInfo,
   SynthesizeResult,
-  TextAnnotation,
   TranscribeResult,
   TutorEvent,
   TutorMessage,
@@ -56,7 +56,9 @@ const api = {
     ready: (): Promise<boolean> => ipcRenderer.invoke('dictionary:ready'),
     search: (query: string, limit?: number): Promise<DictionaryEntry[]> =>
       ipcRenderer.invoke('dictionary:search', query, limit),
-    annotate: (text: string): Promise<TextAnnotation> => ipcRenderer.invoke('dictionary:annotate', text)
+    // Split so a slow translation never blocks the (near-instant, local) pinyin lookup.
+    pinyin: (text: string): Promise<string> => ipcRenderer.invoke('dictionary:pinyin', text),
+    translate: (text: string): Promise<string> => ipcRenderer.invoke('dictionary:translate', text)
   },
   lessons: {
     list: (): Promise<LessonSummary[]> => ipcRenderer.invoke('lessons:list'),
@@ -90,6 +92,8 @@ const api = {
     sendMessage: (sessionId: number, message: string, source: TutorMessage['source']): Promise<TutorTurnResult> =>
       ipcRenderer.invoke('tutor:sendMessage', sessionId, message, source),
     endSession: (sessionId: number): Promise<TutorSummary> => ipcRenderer.invoke('tutor:endSession', sessionId),
+    setCorrectionMode: (sessionId: number, mode: CorrectionMode): Promise<TutorSession> =>
+      ipcRenderer.invoke('tutor:setCorrectionMode', sessionId, mode),
     onEvent: (callback: (sessionId: number, event: TutorEvent) => void): (() => void) => {
       const listener = (_e: unknown, payload: { sessionId: number; event: TutorEvent }): void =>
         callback(payload.sessionId, payload.event)

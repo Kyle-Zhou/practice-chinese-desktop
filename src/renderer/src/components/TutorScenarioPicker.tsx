@@ -1,19 +1,17 @@
 import { useEffect, useState } from 'react'
-import type { AppSettings, CorrectionMode, Scenario, SecretName, TutorSessionSummaryRow } from '@shared/types'
+import type { AppSettings, Scenario, SecretName, TutorSessionSummaryRow } from '@shared/types'
 
 interface Props {
-  onExit: () => void
   onOpenSession: (sessionId: number) => void
-  onViewSummary: (sessionId: number) => void
+  onViewHistory: () => void
   onOpenSettings: () => void
 }
 
-export default function TutorScenarioPicker({ onExit, onOpenSession, onViewSummary, onOpenSettings }: Props): React.JSX.Element {
+export default function TutorScenarioPicker({ onOpenSession, onViewHistory, onOpenSettings }: Props): React.JSX.Element {
   const [scenarios, setScenarios] = useState<Scenario[] | null>(null)
   const [sessions, setSessions] = useState<TutorSessionSummaryRow[]>([])
   const [secrets, setSecrets] = useState<Record<SecretName, boolean> | null>(null)
   const [settings, setSettings] = useState<AppSettings | null>(null)
-  const [correctionMode, setCorrectionMode] = useState<CorrectionMode>('inline')
   const [starting, setStarting] = useState(false)
   const [themePrompt, setThemePrompt] = useState('')
   const [creatingTheme, setCreatingTheme] = useState(false)
@@ -40,7 +38,7 @@ export default function TutorScenarioPicker({ onExit, onOpenSession, onViewSumma
     setStarting(true)
     setError(null)
     try {
-      const session = await window.api.tutor.startSession({ scenarioId, correctionMode })
+      const session = await window.api.tutor.startSession({ scenarioId })
       onOpenSession(session.id)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
@@ -86,7 +84,7 @@ export default function TutorScenarioPicker({ onExit, onOpenSession, onViewSumma
     settings.sttProvider === 'openai' ? secrets.openai : Boolean(settings.whisperCliPath && settings.whisperModelPath)
   const ttsReady = settings.ttsProvider === 'system' || secrets.openai
   const active = sessions.filter((s) => s.status === 'active')
-  const completed = sessions.filter((s) => s.status === 'completed')
+  const hasPastSessions = sessions.some((s) => s.status === 'completed')
   const conversations = scenarios.filter((s) => s.kind === 'conversation')
   const roleplays = scenarios.filter((s) => s.kind === 'roleplay')
 
@@ -117,12 +115,14 @@ export default function TutorScenarioPicker({ onExit, onOpenSession, onViewSumma
   return (
     <div className="deck-list">
       <div className="study-toolbar">
-        <button className="btn" onClick={onExit}>
-          ← Back to decks
-        </button>
+        <h2>AI Tutor</h2>
+        {hasPastSessions && (
+          <button className="btn" onClick={onViewHistory}>
+            Past sessions
+          </button>
+        )}
       </div>
 
-      <h2>AI Tutor</h2>
       {!canChat && (
         <p className="tutor-error">
           Add an Anthropic API key in <a onClick={onOpenSettings}>Settings</a> before starting a session.
@@ -164,21 +164,6 @@ export default function TutorScenarioPicker({ onExit, onOpenSession, onViewSumma
         </>
       )}
 
-      <div className="tutor-mode-picker">
-        <label>
-          <input type="radio" checked={correctionMode === 'inline'} onChange={() => setCorrectionMode('inline')} />
-          <span>
-            <strong>Correct me as we go</strong> — the tutor says the corrected sentence before continuing
-          </span>
-        </label>
-        <label>
-          <input type="radio" checked={correctionMode === 'silent'} onChange={() => setCorrectionMode('silent')} />
-          <span>
-            <strong>Immersive</strong> — the tutor stays in flow; corrections only show on screen
-          </span>
-        </label>
-      </div>
-
       <h3 className="section-title">Free conversation</h3>
       <form className="new-deck-form" onSubmit={handleCreateTheme}>
         <input
@@ -196,32 +181,6 @@ export default function TutorScenarioPicker({ onExit, onOpenSession, onViewSumma
 
       <h3 className="section-title">Role-play</h3>
       <ul className="deck-cards">{roleplays.map(scenarioCard)}</ul>
-
-      {completed.length > 0 && (
-        <>
-          <h3 className="section-title">Past sessions</h3>
-          <ul className="deck-cards">
-            {completed.map((s) => (
-              <li key={s.id} className="deck-card">
-                <div className="deck-card-info">
-                  <h3>{s.scenarioName}</h3>
-                  <p className="deck-stats">
-                    {s.progressPercent}% · {new Date(s.updatedAt).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="deck-card-actions">
-                  <button className="btn" onClick={() => onViewSummary(s.id)}>
-                    Summary
-                  </button>
-                  <button className="btn btn-danger" onClick={() => handleDeleteSession(s.id)}>
-                    Delete
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
     </div>
   )
 }

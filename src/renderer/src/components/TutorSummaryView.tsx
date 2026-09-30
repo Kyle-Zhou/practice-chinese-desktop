@@ -6,6 +6,25 @@ interface Props {
   onExit: () => void
 }
 
+function BackIcon(): React.JSX.Element {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <line x1="19" y1="12" x2="5" y2="12" />
+      <polyline points="12 19 5 12 12 5" />
+    </svg>
+  )
+}
+
 export default function TutorSummaryView({ sessionId, onExit }: Props): React.JSX.Element {
   const [session, setSession] = useState<TutorSession | null>(null)
   const [showPinyin, setShowPinyin] = useState(true)
@@ -23,10 +42,10 @@ export default function TutorSummaryView({ sessionId, onExit }: Props): React.JS
   if (!summary) {
     return (
       <div className="tutor-summary">
-        <p>This session hasn’t been summarized yet.</p>
-        <button className="btn" onClick={onExit}>
-          Back
+        <button className="btn btn-icon" onClick={onExit} aria-label="Back to AI Tutor" title="Back to AI Tutor">
+          <BackIcon />
         </button>
+        <p>This session hasn’t been summarized yet.</p>
       </div>
     )
   }
@@ -35,6 +54,9 @@ export default function TutorSummaryView({ sessionId, onExit }: Props): React.JS
 
   return (
     <div className="tutor-summary">
+      <button className="btn btn-icon" onClick={onExit} aria-label="Back to AI Tutor" title="Back to AI Tutor">
+        <BackIcon />
+      </button>
       <h2>Session Complete: {session.scenarioName}</h2>
 
       <div className="settings-card">
@@ -100,10 +122,6 @@ export default function TutorSummaryView({ sessionId, onExit }: Props): React.JS
           </>
         )}
       </div>
-
-      <button className="btn btn-primary" onClick={onExit}>
-        Back to tutor
-      </button>
     </div>
   )
 }

@@ -1,11 +1,40 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { nextCheckpoint, planProgress } from '@shared/plan'
 import { speakableText } from '@shared/text'
-import type { AppSettings, Correction, TutorMessage, TutorSession, VocabCandidate, VoiceMode } from '@shared/types'
+import type {
+  AppSettings,
+  CorrectionMode,
+  Correction,
+  TutorMessage,
+  TutorSession,
+  VocabCandidate,
+  VoiceMode
+} from '@shared/types'
 import { useTtsPlayer } from '../hooks/useTtsPlayer'
 import { useVoiceLoop } from '../hooks/useVoiceLoop'
 import SessionSummarizing from './SessionSummarizing'
+import TutorSessionSettings from './TutorSessionSettings'
 import VoiceOverlay, { type VoiceStatus } from './VoiceOverlay'
+
+/** Matches the gear used for the app-wide Settings nav item, so "session settings" reads as the same concept. */
+function GearIcon(): React.JSX.Element {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  )
+}
 
 interface Props {
   sessionId: number
@@ -17,6 +46,16 @@ type Phase = 'idle' | 'opening' | 'transcribing' | 'thinking' | 'replying' | 'an
 
 /** Floor on how long the "wrapping up" screen stays visible, so it never flashes. */
 const MIN_ENDING_MS = 700
+
+/**
+ * Typing is turned off for now: this user does all input by voice, so the typed-input screen
+ * (message bubbles, text box, send button, and the plan/corrections/vocab sidebar) is
+ * unreachable while this is false — nothing below was deleted, so flipping it back to `true`
+ * restores the "⌨" button in the voice screen's control row and everything it leads to, with
+ * no other changes needed. The live transcript people actually asked to keep is the side panel
+ * in the voice screen instead (see `transcriptOpen` below).
+ */
+const KEYBOARD_MODE_ENABLED = false
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
@@ -40,11 +79,14 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
   const [corrections, setCorrections] = useState<Correction[]>([])
   const [completedIds, setCompletedIds] = useState<string[]>([])
   const [vocabAdded, setVocabAdded] = useState<VocabCandidate[]>([])
+  const [correctionMode, setCorrectionMode] = useState<CorrectionMode>('inline')
   const [input, setInput] = useState('')
   const [phase, setPhase] = useState<Phase>('idle')
   const [ending, setEnding] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [voiceView, setVoiceView] = useState(true)
+  const [showSettings, setShowSettings] = useState(false)
+  const [transcriptOpen, setTranscriptOpen] = useState(false)
   const [muted, setMuted] = useState(false)
   const [paused, setPaused] = useState(false)
   const [lastSttMs, setLastSttMs] = useState<number | null>(null)
@@ -68,6 +110,7 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
       setCorrections(sess.corrections)
       setCompletedIds(sess.completedCheckpointIds)
       setVocabAdded(sess.vocabAdded)
+      setCorrectionMode(sess.correctionMode)
       if (sess.transcript.length === 0 && sess.status === 'active') {
         setPhase('opening')
         const opening = window.api.tutor.openSession(sessionId)
@@ -242,8 +285,8 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
    * walks in), so it lives in the session controls rather than only in Settings. The choice is
    * still persisted, so it carries to the next session.
    */
-  function toggleVoiceMode(): void {
-    const next: VoiceMode = effective.voiceMode === 'handsFree' ? 'pushToTalk' : 'handsFree'
+  function setVoiceMode(next: VoiceMode): void {
+    if (next === effective.voiceMode) return
     // Flush anything being held down before the press handlers stop applying.
     if (voice.micState === 'capturing') voice.pressEnd()
     setSettings({ ...effective, voiceMode: next })
@@ -263,6 +306,17 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
     })
   }
 
+  /**
+   * How the tutor corrects mistakes is a session-time choice (a noisy room calls for silent
+   * corrections; a focused review calls for spoken ones), so it's changeable mid-conversation
+   * here rather than only at session start.
+   */
+  function setCorrectionModeAndPersist(next: CorrectionMode): void {
+    if (next === correctionMode) return
+    setCorrectionMode(next)
+    void window.api.tutor.setCorrectionMode(sessionId, next)
+  }
+
   function togglePinyin(): void {
     const next = !effective.showPinyin
     setSettings({ ...effective, showPinyin: next })
@@ -275,13 +329,15 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
     void window.api.settings.update({ voiceShowEnglish: next })
   }
 
-  if (!session || !settings) return <p>Loading session…</p>
+  // Loading the session record, and — for a brand-new one — waiting on the tutor's opening
+  // line to start streaming, are both "nothing to show yet" gaps. Same spinner as ending a
+  // session, so starting one doesn't flash a different, plainer loading state.
+  if (!session || !settings) return <SessionSummarizing />
 
   const progress = planProgress(session.plan, completedIds)
 
-  // Ending covers both views: whichever one you pressed it from, the wait looks the same.
-  if (ending)
-    return <SessionSummarizing />
+  if (ending) return <SessionSummarizing />
+  if (phase === 'opening' && messages.length === 0 && !streamingText) return <SessionSummarizing />
   const next = nextCheckpoint(session.plan, completedIds)
   const busy = phase !== 'idle'
   const capturing = voice.micState === 'capturing'
@@ -306,34 +362,59 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
                 ? 'speaking'
                 : 'listening'
     return (
-      <VoiceOverlay
-        status={status}
-        micState={voice.micState}
-        level={voice.level}
-        caption={streamingText || lastTutor}
-        lastUserText={lastUser}
-        latestCorrection={corrections[corrections.length - 1] ?? null}
-        progress={progress}
-        themeName={session.scenarioName}
-        error={combinedError}
-        ending={ending}
-        voiceMode={effective.voiceMode}
-        onToggleVoiceMode={toggleVoiceMode}
-        onPressStart={voice.pressStart}
-        onPressEnd={voice.pressEnd}
-        onToggleMute={() => setMuted((m) => !m)}
-        paused={paused}
-        onTogglePause={togglePause}
-        showPinyin={effective.showPinyin}
-        onTogglePinyin={togglePinyin}
-        showEnglish={effective.voiceShowEnglish}
-        onToggleEnglish={toggleVoiceEnglish}
-        onShowChat={() => setVoiceView(false)}
-        onEnd={handleEndSession}
-      />
+      <>
+        <VoiceOverlay
+          status={status}
+          micState={voice.micState}
+          // Frozen while a modal is open: the orb's scale updates on every audio frame, and
+          // that constant repaint underneath a translucent overlay is what caused the settings
+          // panel's own text to visibly bleed through in Chromium.
+          level={showSettings ? 0 : voice.level}
+          caption={streamingText || lastTutor}
+          lastUserText={lastUser}
+          latestCorrection={corrections[corrections.length - 1] ?? null}
+          progress={progress}
+          themeName={session.scenarioName}
+          error={combinedError}
+          ending={ending}
+          voiceMode={effective.voiceMode}
+          messages={messages}
+          streamingText={streamingText}
+          transcriptOpen={transcriptOpen}
+          onToggleTranscript={() => setTranscriptOpen((o) => !o)}
+          onPressStart={voice.pressStart}
+          onPressEnd={voice.pressEnd}
+          onToggleMute={() => setMuted((m) => !m)}
+          autoSpeak={effective.autoSpeak}
+          onToggleAutoSpeak={toggleAutoSpeak}
+          paused={paused}
+          onTogglePause={togglePause}
+          showPinyin={effective.showPinyin}
+          showEnglish={effective.voiceShowEnglish}
+          onOpenSettings={() => setShowSettings(true)}
+          onShowChat={KEYBOARD_MODE_ENABLED ? () => setVoiceView(false) : undefined}
+          onEnd={handleEndSession}
+        />
+        {showSettings && (
+          <TutorSessionSettings
+            correctionMode={correctionMode}
+            onCorrectionModeChange={setCorrectionModeAndPersist}
+            voiceMode={effective.voiceMode}
+            onVoiceModeChange={setVoiceMode}
+            showPinyin={effective.showPinyin}
+            onTogglePinyin={togglePinyin}
+            showEnglish={effective.voiceShowEnglish}
+            onToggleEnglish={toggleVoiceEnglish}
+            onClose={() => setShowSettings(false)}
+          />
+        )}
+      </>
     )
   }
 
+  // Typed-input screen: unreachable while KEYBOARD_MODE_ENABLED is false (see its definition
+  // above), since nothing sets voiceView to false without it. Left intact so re-enabling the
+  // flag is the only change needed to bring it back.
   return (
     <div className="tutor-chat">
       <div className="study-toolbar">
@@ -346,22 +427,12 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
             🎙 Voice
           </button>
           <button
-            className="btn"
-            onClick={toggleVoiceMode}
-            title={
-              effective.voiceMode === 'pushToTalk'
-                ? 'Push to talk — click to switch to hands-free'
-                : 'Hands-free — click to switch to push to talk'
-            }
+            className="btn btn-icon"
+            onClick={() => setShowSettings(true)}
+            aria-label="Session settings"
+            title="Session settings"
           >
-            {effective.voiceMode === 'pushToTalk' ? '✋ Push to talk' : '🎙 Hands-free'}
-          </button>
-          <button
-            className={`btn ${settings.autoSpeak ? 'btn-toggle-on' : ''}`}
-            onClick={toggleAutoSpeak}
-            title="Read replies aloud"
-          >
-            {settings.autoSpeak ? '🔊' : '🔇'}
+            <GearIcon />
           </button>
           <button className="btn btn-primary" onClick={handleEndSession} disabled={ending}>
             {ending ? 'Summarizing…' : progress === 100 ? 'Finish' : 'End Session'}
@@ -470,6 +541,20 @@ export default function TutorChat({ sessionId, onExit, onComplete }: Props): Rea
         </button>
         {lastSttMs !== null && <span className="tutor-stt-ms">STT {lastSttMs} ms</span>}
       </form>
+
+      {showSettings && (
+        <TutorSessionSettings
+          correctionMode={correctionMode}
+          onCorrectionModeChange={setCorrectionModeAndPersist}
+          voiceMode={effective.voiceMode}
+          onVoiceModeChange={setVoiceMode}
+          showPinyin={effective.showPinyin}
+          onTogglePinyin={togglePinyin}
+          showEnglish={effective.voiceShowEnglish}
+          onToggleEnglish={toggleVoiceEnglish}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </div>
   )
 }

@@ -6,6 +6,7 @@ import * as tutor from './tutor'
 import { dictionaryReady } from './dictionary'
 import type {
   AppSettings,
+  CorrectionMode,
   Grade,
   LessonResultInput,
   NewCardInput,
@@ -35,7 +36,9 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('dictionary:ready', () => dictionaryReady())
   ipcMain.handle('dictionary:search', (_e, query: string, limit?: number) => db.searchDictionary(query, limit))
-  ipcMain.handle('dictionary:annotate', (_e, text: string) => db.annotateHanzi(text))
+  // Split so the UI can show pinyin immediately without waiting on the slower translation call.
+  ipcMain.handle('dictionary:pinyin', (_e, text: string) => db.pinyinForText(text))
+  ipcMain.handle('dictionary:translate', (_e, text: string) => tutor.translateToEnglish(text).catch(() => ''))
 
   ipcMain.handle('lessons:list', () => db.listLessons())
   ipcMain.handle('lessons:get', (_e, id: string) => db.getLesson(id))
@@ -79,4 +82,7 @@ export function registerIpcHandlers(): void {
       })
   )
   ipcMain.handle('tutor:endSession', (_e, sessionId: number) => tutor.endSession(sessionId))
+  ipcMain.handle('tutor:setCorrectionMode', (_e, sessionId: number, mode: CorrectionMode) =>
+    tutor.setCorrectionMode(sessionId, mode)
+  )
 }
